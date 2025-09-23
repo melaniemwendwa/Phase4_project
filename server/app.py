@@ -1,24 +1,19 @@
-#!/usr/bin/env python3
 from flask import request, jsonify, redirect, url_for
 from flask_cors import CORS
 
 from config import app, db
-from models import SupportGroup
+from models import SupportGroup, Membership
 
 # Enable CORS for React frontend
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
-# Ensure database tables exist (for quick setup without running migrations)
 with app.app_context():
     db.create_all()
 
-# Home route
 @app.route('/')
 def home():
-    # Redirect to the 'get_groups' endpoint
     return redirect(url_for('get_groups'))
 
-# CRUD for SupportGroup
 @app.route('/groups', methods=['GET'])
 def get_groups():
     groups = SupportGroup.query.all()
@@ -63,6 +58,25 @@ def delete_group(group_id):
     db.session.delete(group)
     db.session.commit()
     return '', 204
+
+@app.route('/groups/<int:group_id>/join', methods=['POST'])
+def join_group(group_id):
+    group = SupportGroup.query.get_or_404(group_id)
+    data = request.get_json() or {}
+    user_id = data.get('user_id')
+    role = data.get('role', 'member')
+    if not user_id:
+        return jsonify({'error': 'user_id is required'}), 400
+
+    existing = Membership.query.filter_by(group_id=group.id, user_id=user_id).first()
+    if existing:
+        return jsonify({'message': 'already a member', 'membership_id': existing.id, 'role': existing.role}), 200
+
+    membership = Membership(group_id=group.id, user_id=user_id, role=role)
+    db.session.add(membership)
+    db.session.commit()
+    return jsonify({'id': membership.id, 'group_id': group.id, 'user_id': user_id, 'role': role}), 201
+
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)

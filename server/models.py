@@ -20,3 +20,11 @@ class SupportGroup(db.Model, SerializerMixin):
             "description": self.description,
             "meeting_times": self.meeting_times
         }
+
+class Membership(db.Model, SerializerMixin):
+    __tablename__ = "memberships"
+
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey("support_groups.id"), nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)  # placeholder for now
+    role = db.Column(db.String(50), nullable=False, default="member")

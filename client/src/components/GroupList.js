@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function GroupList() {
   const [groups, setGroups] = useState([]);
@@ -7,27 +8,24 @@ export default function GroupList() {
   const [meetingTimes, setMeetingTimes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [editingGroup, setEditingGroup] = useState(null); // State for the group being edited
+  const [editingGroup, setEditingGroup] = useState(null);
 
-  // Fetch existing groups
   useEffect(() => {
     setLoading(true);
     setError("");
-    fetch("http://localhost:5555/groups")
+    fetch("/groups")
       .then((res) => res.json())
       .then((data) => setGroups(data))
       .catch(() => setError("Failed to load groups."))
       .finally(() => setLoading(false));
   }, []);
 
-  // Handle group creation
   const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
 
-    // Determine the HTTP method and URL based on whether we are editing or creating
     const method = editingGroup ? "PUT" : "POST";
-    const url = editingGroup ? `http://localhost:5555/groups/${editingGroup.id}` : "http://localhost:5555/groups";
+    const url = editingGroup ? `/groups/${editingGroup.id}` : "/groups";
 
     fetch(url, {
       method: method,
@@ -35,7 +33,7 @@ export default function GroupList() {
       body: JSON.stringify({
         topic,
         description,
-        meeting_times: meetingTimes,
+         meeting_times: meetingTimes,
       }),
     })
       .then((res) => {
@@ -44,11 +42,9 @@ export default function GroupList() {
       })
       .then((data) => {
         if (editingGroup) {
-          // Update the list with the edited group
-          setGroups(groups.map(g => (g.id === data.id ? data : g)));
-          setEditingGroup(null); // Clear editing state
+          setGroups(groups.map((g) => (g.id === data.id ? data : g)));
+          setEditingGroup(null);
         } else {
-          // Add the new group to the list
           setGroups([...groups, data]);
         }
         setTopic("");
@@ -57,23 +53,17 @@ export default function GroupList() {
       })
       .catch(() => setError(`Failed to ${editingGroup ? "update" : "create"} group.`));
   };
-
-  // Handle delete
-  const handleDelete = (id) => {
+   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this group?")) {
-      fetch(`http://localhost:5555/groups/${id}`, {
-        method: "DELETE",
-      })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to delete group");
-        // Filter out the deleted group from the list
-        setGroups(groups.filter((g) => g.id !== id));
-      })
-      .catch(() => setError("Failed to delete group."));
+      fetch(`/groups/${id}`, { method: "DELETE" })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to delete group");
+          setGroups(groups.filter((g) => g.id !== id));
+        })
+        .catch(() => setError("Failed to delete group."));
     }
   };
 
-  // Handle edit click
   const handleEditClick = (group) => {
     setEditingGroup(group);
     setTopic(group.topic);
@@ -83,7 +73,6 @@ export default function GroupList() {
 
   return (
     <div className="support-groups">
-      {/* Form */}
       <h2>{editingGroup ? "Edit Group" : "Create a New Group"}</h2>
       {error && <div className="alert">{error}</div>}
       <form onSubmit={handleSubmit} className="group-form">
@@ -111,18 +100,20 @@ export default function GroupList() {
       </form>
       <hr/>
 
-      {/* List */}
       <h2>Available Support Groups</h2>
       {loading ? <p className="muted">Loading...</p> : null}
       <ul className="groups-list">
         {groups.map((g) => (
           <li key={g.id} className="group-item">
-            <h3 className="group-topic">{g.topic}</h3>
+            <h3 className="group-topic">
+              <Link to={`/groups/${g.id}`}>{g.topic}</Link>
+            </h3>
             <p className="group-description">{g.description}</p>
             <p className="group-meeting-times">{g.meeting_times}</p>
             <div className="group-actions">
               <button onClick={() => handleEditClick(g)}>Edit</button>
-              <button onClick={() => handleDelete(g.id)}>Delete</button>
+                            <button onClick={() => handleDelete(g.id)}>Delete</button>
+              <Link to={`/groups/${g.id}`}>View</Link>
             </div>
           </li>
         ))}

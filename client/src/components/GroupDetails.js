@@ -1,68 +1,53 @@
-import React, { useState, useEffect } from "react";
-import { joinGroup, leaveGroup, getGroupMembers } from "../api";
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
 
-function GroupDetails({ group, userId }) {
-  const [isMember, setIsMember] = useState(false);
-  const [role, setRole] = useState("member");
-  const [members, setMembers] = useState([]);
+export default function GroupDetails() {
+  const { id } = useParams();
+  const [group, setGroup] = useState(null);
+  const [joining, setJoining] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // fetch members of this group
-    async function fetchMembers() {
-      const data = await getGroupMembers(group.id);
-      setMembers(data);
+    setError("");
+    fetch(`/groups/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load group");
+        return res.json();
+      })
+      .then(setGroup)
+      .catch(() => setError("Failed to load group details"));
+  }, [id]);
 
-      const membership = data.find((m) => m.user.id === userId);
-      if (membership) {
-        setIsMember(true);
-        setRole(membership.role);
-      }
-    }
-    fetchMembers();
-  }, [group.id, userId]);
-
-  const handleJoin = async () => {
-    const res = await joinGroup(userId, group.id, "member");
-    if (!res.error) {
-      setIsMember(true);
-      setRole(res.role);
-      setMembers([...members, res]);
-    }
+  const handleJoin = () => {
+    setJoining(true);
+    setError("");
+    fetch(`/groups/${id}/join`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: 1, role: "member" }), // placeholder current user
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to join");
+        return res.json();
+      })
+      .then(() => {
+        alert("Joined group!");
+      })
+            .catch(() => setError("Failed to join group"))
+      .finally(() => setJoining(false));
   };
 
-  const handleLeave = async () => {
-    const res = await leaveGroup(userId, group.id);
-    if (res.message) {
-      setIsMember(false);
-      setRole("member");
-      setMembers(members.filter((m) => m.user.id !== userId));
-    }
-  };
+  if (!group) return <div>{error || "Loading..."}</div>;
 
   return (
     <div>
+      <Link to="/groups">← Back to groups</Link>
       <h2>{group.topic}</h2>
       <p>{group.description}</p>
-
-      {isMember ? (
-        <>
-          <p>You are a <b>{role}</b> in this group</p>
-          <button onClick={handleLeave}>Leave Group</button>
-        </>
-      ) : (
-        <button onClick={handleJoin}>Join Group</button>
-      )}
-
-      <h3>Members</h3>
-      <ul>
-        {members.map((m) => (
-          <li key={m.id}>
-            {m.user.nickname} ({m.role})
-          </li>
-        ))}
-      </ul>
+      <p><b>Meeting times:</b> {group.meeting_times}</p>
+      <button onClick={handleJoin} disabled={joining}>
+        {joining ? "Joining..." : "Join Group"}
+      </button>
     </div>
   );
 }
-
-export default GroupDetails;
