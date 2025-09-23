@@ -11,7 +11,7 @@ class SupportGroup(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     topic = db.Column(db.String(120), nullable=False)
     description= db.Column(db.Text, nullable=True)
-    meeting_times = db.Collumn(db.String(255), nullable=True)
+    meeting_times = db.Column(db.String(255), nullable=True)
 
     def to_dict(self):
         return {
