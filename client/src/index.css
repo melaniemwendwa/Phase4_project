@@ -1,7 +1,208 @@
+/* New Color Palette (No change here, still the good one!) */
 :root {
-  --bg: #282c34;
-  --header: #fff;
-  --link: #61dafb;
-  --text: hsla(0, 0%, 100%, 0.88);
+  --lavender: #A78BFA;
+  --white-soft: #F8FAFC;
+  --yellow: #FBBF24;
+  --white: #FFFFFF;
+  --black: #000000;
+
+  /* Re-aliasing for clarity in component styling */
+  --bg: var(--white-soft);
+  --text: var(--black);
+  --titles: var(--lavender);
+  --accents: var(--yellow);
+  --card-bg: var(--white);
+  --border-color: #E2E8F0; /* A light, soft border for inputs */
 }
 
+/* Base Styles for Youthful Vibe */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg);
+  font-family: 'Poppins', sans-serif; /* A more youthful font */
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* Scoped Support Groups styles */
+.support-groups {
+  padding: 2.5rem 1.5rem; /* More vertical padding */
+  max-width: 800px; /* Slightly narrower for focus */
+  margin: 0 auto;
+}
+
+.support-groups h2 {
+  font-family: 'Poppins', sans-serif;
+  color: var(--titles);
+  font-size: 2.5rem; /* Slightly larger title */
+  font-weight: 800; /* Bolder */
+  margin: 0 0 2rem; /* More space below title */
+  text-align: center;
+  letter-spacing: -0.02em; /* Tighter letter spacing for modern feel */
+}
+
+/* --- Form Styles --- */
+.support-groups .group-form {
+  background: var(--card-bg);
+  border: none;
+  border-radius: 16px; /* Even softer, more rounded corners */
+  padding: 2.5rem; /* More padding inside the form */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Stronger but softer shadow */
+  margin-bottom: 3rem; /* More space below the form */
+  display: flex; /* Use flexbox for layout */
+  flex-direction: column; /* Stack items vertically */
+  gap: 1.25rem; /* Consistent spacing between form elements */
+}
+
+.support-groups .group-form input,
+.support-groups .group-form textarea {
+  border: 1px solid var(--border-color); /* Lighter border for inputs */
+  border-radius: 10px; /* Rounded input fields */
+  padding: 1rem 1.25rem; /* Generous padding */
+  font-size: 1.1rem; /* Slightly larger text in inputs */
+  color: var(--text);
+  width: 100%; /* Make them take full width */
+  box-sizing: border-box; /* Include padding in width */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.support-groups .group-form input::placeholder,
+.support-groups .group-form textarea::placeholder {
+  color: #A0AEC0; /* Lighter placeholder text */
+  opacity: 1; /* Ensure consistent placeholder visibility */
+}
+
+.support-groups .group-form input:focus,
+.support-groups .group-form textarea:focus {
+  outline: none;
+  border-color: var(--lavender); /* Focus border matches title color */
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3); /* Subtle lavender glow */
+}
+
+.support-groups .group-form textarea {
+  min-height: 140px; /* Taller description box */
+  resize: vertical;
+}
+
+.support-groups .group-form button {
+  background: var(--lavender);
+  color: var(--white);
+  border: none;
+  border-radius: 10px; /* Rounded button */
+  padding: 1.2rem 1.5rem; /* Larger button */
+  font-weight: 700; /* Bolder text */
+  cursor: pointer;
+  font-size: 1.15rem; /* Larger button text */
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(167, 139, 250, 0.3); /* Button shadow */
+}
+
+.support-groups .group-form button:hover {
+  background: var(--yellow); /* Accent yellow on hover */
+  color: var(--black);
+  box-shadow: 0 8px 20px rgba(251, 191, 36, 0.4); /* Stronger yellow shadow */
+  transform: translateY(-2px); /* Slight lift effect */
+}
+
+/* Separator line */
+hr {
+  border: none;
+  border-top: 1px solid #E2E8F0; /* Lighter, more subtle separator */
+  margin: 3rem 0; /* More spacing around the line */
+}
+
+/* --- List Styles --- */
+.support-groups .groups-list {
+  list-style: none;
+  padding: 0;
+  margin: 0; /* Reset margin */
+  display: grid;
+  gap: 1.5rem;
+}
+
+.support-groups .group-item {
+  background: var(--card-bg);
+  border: none;
+  border-radius: 16px; /* Consistent rounded corners */
+  padding: 2rem; /* More internal padding */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06); /* Stronger, softer shadow for cards */
+  display: flex;
+  flex-direction: column;
+}
+
+.support-groups .group-topic {
+  color: var(--titles);
+  font-size: 1.75rem; /* Larger topic title */
+  font-weight: 800; /* Bolder */
+  margin: 0 0 0.75rem; /* More space below topic */
+  line-height: 1.2;
+}
+
+.support-groups .group-description {
+  margin: 0.75rem 0;
+  line-height: 1.7; /* Increased line height for readability */
+  color: #4A5568; /* Slightly darker gray for main text */
+}
+
+.support-groups .group-meeting-times {
+  margin: 0.75rem 0 0;
+  color: #718096; /* Muted gray for meeting times */
+  font-size: 1rem;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.support-groups .group-actions {
+  display: flex;
+  gap: 0.75rem; /* Increased gap between action buttons */
+  margin-top: 1.5rem; /* More space above action buttons */
+}
+
+.support-groups .group-actions button {
+  background: var(--lavender); /* Solid background by default for actions */
+  border: none; /* No border initially */
+  color: var(--white);
+  font-weight: 600;
+  padding: 0.7rem 1.4rem; /* Larger action buttons */
+  border-radius: 8px; /* Rounded action buttons */
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(167, 139, 250, 0.2); /* Subtle shadow for action buttons */
+}
+
+.support-groups .group-actions button:hover {
+  background: var(--yellow); /* Yellow on hover */
+  color: var(--black);
+  transform: translateY(-1px); /* Slight lift */
+  box-shadow: 0 5px 15px rgba(251, 191, 36, 0.3); /* Stronger yellow shadow on hover */
+}
+
+/* Delete button specific styling */
+.support-groups .group-actions button:last-child { /* Assuming delete is the last button */
+  background: #EF4444; /* A soft red for delete */
+  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.2);
+}
+
+.support-groups .group-actions button:last-child:hover {
+  background: #DC2626; /* Darker red on hover */
+  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+}
+
+
+/* Alert and Muted Text */
+.support-groups .alert {
+  background: #FFFBEA;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.support-groups .muted {
+  color: #9CA3AF;
+  text-align: center;
+}

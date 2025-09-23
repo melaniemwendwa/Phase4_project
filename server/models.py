@@ -6,7 +6,7 @@ from config import db
 # Models go here!
 #support group model
 class SupportGroup(db.Model, SerializerMixin):
-    _tablename_ = "support_groups"
+    __tablename__ = "support_groups"
 
     id = db.Column(db.Integer, primary_key=True)
     topic = db.Column(db.String(120), nullable=False)

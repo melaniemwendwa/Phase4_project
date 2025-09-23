@@ -1,8 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { Switch, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import GroupList from "./GroupList";
 
 function App() {
-  return <h1>Project Client</h1>;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/groups" element={<GroupList />} />
+        <Route path="*" element={<Navigate to="/groups" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
