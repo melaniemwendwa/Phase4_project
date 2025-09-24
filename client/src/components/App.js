@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { Toaster } from "react-hot-toast";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "../pages/Home";
 import NavBar from "./Navbar";
@@ -16,7 +17,8 @@ function App() {
         <nav className="top-0 left-0 fixed w-full z-20">
           <NavBar />
         </nav>
-        <div style={{ paddingTop: 10}}>
+        <div style={{ paddingTop: 10 }}>
+          <Toaster />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/signup" element={<SignUp />} />

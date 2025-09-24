@@ -2,7 +2,7 @@ from flask import request, jsonify, redirect, url_for
 from flask_cors import CORS
 
 from config import app, db
-from models import SupportGroup, Membership, SessionEvent, GroupMessage, Encouragement
+from models import SupportGroup, Membership, User, SessionEvent, GroupMessage, Encouragement
 
 # Enable CORS for React frontend
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
@@ -94,6 +94,40 @@ with app.app_context():
 @app.route('/')
 def home():
     return redirect(url_for('get_groups'))
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.get_json() or {}
+    email = data.get('email')
+    password = data.get('password')
+    user = User.query.filter(User.email == email).first()
+
+    if not email or not password:
+        return jsonify({"error": 'Email and password are required'}), 400
+    
+    if user:
+        return jsonify({"error": 'An account with this email already exists'}), 400
+    
+    new_user = User(email=email)
+    new_user.password_hash = password
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({'message': 'User created succesfully', 'user_id': new_user.id}), 201
+
+@app.route('/signin', methods=["POST"])
+def signin():
+    data = request.get_json() or {}
+    email = data.get('email')
+    password = data.get('password')
+
+    user = User.query.filter(User.email == email).first()
+
+    if user and user.authenticate(password):
+        return jsonify(user.to_dict()), 200
+    else:
+        return jsonify({"error": 'Invalid email or password'}), 401
 
 @app.route('/groups', methods=['GET'])
 def get_groups():

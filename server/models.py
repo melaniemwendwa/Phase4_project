@@ -1,9 +1,46 @@
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.ext.hybrid import hybrid_property
 
-from config import db
+from config import db, bcrypt
 
 # Models go here!
+#users model
+
+class User(db.Model, SerializerMixin):
+    __tablename__ = "users"
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String, unique=True, nullable=False)
+    _password_hash = db.Column(db.String)
+
+    memberships = db.relationship("Membership", back_populates="user", cascade="all, delete-orphan")
+    groups = association_proxy("memberships", "group")
+
+    serialize_rules = ("-memberships.user")
+
+    @hybrid_property
+    def password_hash(self):
+        raise AttributeError('Password hashes may not be viewed')
+
+    @password_hash.setter
+    def password_hash(self, password):
+        password_hash = bcrypt.generate_password_hash(
+            password.encode('utf-8')
+        )
+        self._password_hash = password_hash.decode('utf-8')
+
+    def authenticate(self, password):
+        return bcrypt.check_password_hash(
+            self._password_hash, password.encode('utf-8')
+        )
+
+    def to_dict(self):
+        return {
+            "id" : self.id,
+            "email": self.email
+        }
+
 #support group model
 class SupportGroup(db.Model, SerializerMixin):
     __tablename__ = "support_groups"
@@ -12,6 +49,11 @@ class SupportGroup(db.Model, SerializerMixin):
     topic = db.Column(db.String(120), nullable=False)
     description= db.Column(db.Text, nullable=True)
     meeting_times = db.Column(db.String(255), nullable=True)
+
+    memberships = db.relationship("Membership", back_populates="group", cascade="all, delete-orphan")
+    members = association_proxy("memberships", "user")
+
+    serialize_rules = ("-memberships.group")
 
     def to_dict(self):
         return {
@@ -26,8 +68,14 @@ class Membership(db.Model, SerializerMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("support_groups.id"), nullable=False)
-    user_id = db.Column(db.Integer, nullable=False)  # placeholder for now
+
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False) 
     role = db.Column(db.String(50), nullable=False, default="member")
+
+    user = db.relationship("User", back_populates="memberships")
+    group = db.relationship("SupportGroup", back_populates="memberships")
+
+    serialize_rules = ("-user.memberships", "-group,memberships")
 
 # --- Session/Event Model ---
 class SessionEvent(db.Model, SerializerMixin):
