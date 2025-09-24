@@ -1,13 +1,11 @@
 // import React, { useEffect, useState } from "react";
-import { BrowserRouter, Switch, Route } from "react-router-dom";
+import { BrowserRouter, Switch, Routes, Route, Navigate } from "react-router-dom";
 import Home from "../pages/Home"
 import NavBar from "./Navbar";
 import SignUp from "../pages/SignUp";
 import Dashboard from "../pages/Dashboard";
 import Articles from "../pages/Articles";
 import SignIn from "../pages/SignIn";
-import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import GroupList from "./GroupList";
 import GroupDetails from "./GroupDetails";
 
@@ -24,6 +22,8 @@ function App() {
           <Route path="/signin" component={SignIn} />
           <Route path="/articles" component={Articles} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/groups" component={GroupList} />
+          <Route path="/groups/:id" component={GroupDetails} />
         </Switch>
       </main>
     </BrowserRouter>
