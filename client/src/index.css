@@ -177,9 +177,11 @@ html, body, #root, main, .font-poppins {
 }
 
 
-/* Calendar add button */
-.calendar-add { display:inline-flex; align-items:center; gap:0.5rem; border-radius:999px; padding:0.45rem 0.9rem; background:var(--accent); color:var(--background); border:none; box-shadow:0 6px 20px rgba(232,168,124,0.12); cursor:pointer; font-weight:600 }
+.calendar-add { display:inline-flex; align-items:center; gap:0.5rem; border-radius:999px; padding:0.45rem 0.9rem; background:var(--accents); color:var(--background); border:none; box-shadow:0 6px 20px rgba(232,168,124,0.12); cursor:pointer; font-weight:600 }
 .calendar-add svg { vertical-align:middle }
+
+/* Joined button state (visible contrast) */
+.btn-joined { display:inline-flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.5em 1em; border-radius:999px; background:transparent; color:var(--primary); border:1px solid var(--primary); font-weight:700; cursor:default }
 
 /* Unified form controls and buttons */
 .form-control { width:100%; box-sizing:border-box; padding:0.75rem 1rem; border-radius:12px; border:1px solid var(--border-color); background:var(--card-bg); font-family:'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; font-size:0.98rem; color:var(--text); box-shadow:0 6px 18px rgba(28,37,31,0.04); transition: box-shadow 160ms ease, transform 120ms ease, border-color 120ms ease }

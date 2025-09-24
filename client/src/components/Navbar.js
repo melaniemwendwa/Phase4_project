@@ -6,14 +6,14 @@ import { useState } from "react";
 export default function NavBar() {
     const [open, setOpen] = useState(false);
     return (
-        <header className="site-header">
+        <header className="site-header" >
             <div className="nav-inner">
                 <NavLink to="/" className="site-logo">
                     <img src={`${process.env.PUBLIC_URL || ''}/logo.svg`} alt="OpenCircle" 
                     style={{width: '150px', height: 'auto'}}/>
                 </NavLink>
 
-                <div style={{display:'flex', alignItems:'center', gap:12}}>
+                <div style={{display:'flex', alignItems:'center', gap:12, justifyContent:'space-between'}}>
                     <div className="nav-links">
                         {Object.entries(NavLinks).map(([key, value]) => (
                             <NavLink key={key} to={value} className={({isActive})=> isActive ? 'active' : ''}>{key}</NavLink>

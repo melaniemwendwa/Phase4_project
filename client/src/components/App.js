@@ -16,7 +16,7 @@ function App() {
         <nav className="top-0 left-0 fixed w-full z-20">
           <NavBar />
         </nav>
-        <div style={{ paddingTop: 72 }}>
+        <div style={{ paddingTop: 10}}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/signup" element={<SignUp />} />

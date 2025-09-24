@@ -72,10 +72,8 @@ const GroupDetails = () => {
       <div className="group-stats-row" style={{display: 'flex', alignItems: 'center', gap: '1em', margin: '1.2em 0 0 2em', fontSize: '1em', fontFamily: 'Poppins'}}>
         <span style={{display: 'flex', alignItems: 'center', gap: '0.4em'}}><i className="fas fa-users"></i> {group.members} members</span>
         <span style={{display: 'flex', alignItems: 'center', gap: '0.4em'}}><strong>{posts.length}</strong> posts</span>
-        <div style={{marginLeft: '0.6em', display: 'flex', gap: '0.6em', alignItems: 'center'}}>
-          <button className="button" disabled={joined} onClick={handleJoin} style={{background: joined ? 'var(--primary-light)' : 'var(--primary)', 
-            color: 'var(--background)', borderRadius: '999px', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.95em', 
-            padding: '0.5em 1em', boxShadow: '0 2px 8px rgba(123, 155, 140, 0.12)'}}>{joined ? "Joined" : "Join"}</button>
+          <div style={{marginLeft: '0.6em', display: 'flex', gap: '0.6em', alignItems: 'center'}}>
+          <button className={joined ? 'btn-joined' : 'btn btn-primary'} disabled={joined} onClick={handleJoin}>{joined ? "Joined" : "Join"}</button>
           <button className="button" style={{padding:'0.5em 1em', fontSize:'0.95em', borderRadius:'999px', fontFamily:'Poppins', display:'flex', alignItems:'center', gap:'0.4em', boxShadow:'0 2px 8px rgba(123,155,140,0.10)', background:'var(--primary)', color:'var(--background)', fontWeight:600}} onClick={()=>setShowGuidelines(true)}>
             <span style={{fontSize:'1.05em'}}>+</span>
             <span style={{fontSize:'0.98em'}}>Create</span>
