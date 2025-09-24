@@ -29,11 +29,12 @@ export default function FeaturedGroups() {
           {groups.map(g => (
             <Link key={g.id} to={`/groups/${g.id}`} className="group-spotlight">
               <div className="avatar">
-                {g.name.split(' ').slice(0,2).map(w=>w[0]).join('')}
+                {(g.topic || '').split(' ').slice(0,2).map(w=>w[0]).join('')}
               </div>
               <div className="meta">
-                <div className="name">{g.name}</div>
+                <div className="name">{g.topic}</div>
                 <div className="desc">{g.description}</div>
+                <div className="desc" style={{marginTop:4, fontSize:'0.9em', color:'#6B7280'}}>{g.member_count ?? 0} members</div>
               </div>
             </Link>
           ))}

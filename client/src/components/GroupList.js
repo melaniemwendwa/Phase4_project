@@ -98,6 +98,7 @@ export default function GroupList() {
             </h3>
             <p className="group-description">{g.description}</p>
             <p className="group-meeting-times">{g.meeting_times}</p>
+            <p className="group-members" style={{color:'#6B7280'}}>{g.member_count ?? 0} members</p>
             <div className="group-actions">
               <button onClick={() => handleEditClick(g)}>Edit</button>
                             <button onClick={() => handleDelete(g.id)}>Delete</button>

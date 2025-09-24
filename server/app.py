@@ -192,6 +192,31 @@ def join_group(group_id):
     db.session.commit()
     return jsonify({'id': membership.id, 'group_id': group.id, 'user_id': user_id, 'role': role}), 201
 
+@app.route('/groups/<int:group_id>/leave', methods=['POST'])
+def leave_group(group_id):
+    data = request.get_json() or {}
+    user_id = data.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'user_id is required'}), 400
+    membership = Membership.query.filter_by(group_id=group_id, user_id=user_id).first()
+    if not membership:
+        return jsonify({'message': 'not a member'}), 200
+    db.session.delete(membership)
+    db.session.commit()
+    return jsonify({'message': 'left group'}), 200
+
+
+@app.route('/users/<int:user_id>/groups', methods=['GET'])
+def get_user_groups(user_id):
+    """Return groups that the specified user has joined via memberships."""
+    user = User.query.get_or_404(user_id)
+    memberships = Membership.query.filter_by(user_id=user.id).all()
+    group_ids = [m.group_id for m in memberships]
+    if not group_ids:
+        return jsonify([]), 200
+    groups = SupportGroup.query.filter(SupportGroup.id.in_(group_ids)).all()
+    return jsonify([g.to_dict() for g in groups]), 200
+
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)

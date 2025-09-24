@@ -21,7 +21,7 @@ export default function NavBar() {
                     </div>
 
                     <div className="nav-cta">
-                        <NavLink to="/groups"><button className="btn btn-primary">Join the community</button></NavLink>
+                        <NavLink to="/signup"><button className="btn btn-primary">Join the community</button></NavLink>
                     </div>
 
                     <button className="hamburger" aria-label="Toggle menu" onClick={()=>setOpen(o=>!o)}>☰</button>

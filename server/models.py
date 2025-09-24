@@ -60,7 +60,8 @@ class SupportGroup(db.Model, SerializerMixin):
             "id": self.id,
             "topic": self.topic,
             "description": self.description,
-            "meeting_times": self.meeting_times
+            "meeting_times": self.meeting_times,
+            "member_count": len(self.memberships or [])
         }
 
 class Membership(db.Model, SerializerMixin):

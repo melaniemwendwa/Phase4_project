@@ -50,10 +50,10 @@ export default function Groups() {
               <Link key={g.id} to={`/groups/${g.id}`} className="group-link">
                 <article className="group-card">
                   <div className="group-row">
-                    <div className="group-avatar-small">{g.name.split(' ').slice(0,2).map(w=>w[0]).join('')}</div>
+                    <div className="group-avatar-small">{(g.topic || '').split(' ').slice(0,2).map(w=>w[0]).join('')}</div>
                     <div className="group-meta">
-                      <div className="group-name">{g.name}</div>
-                      <div className="group-members">{g.members} members</div>
+                      <div className="group-name">{g.topic}</div>
+                      <div className="group-members">{g.member_count ?? 0} members</div>
                     </div>
                   </div>
                   <p className="group-desc">{g.description}</p>

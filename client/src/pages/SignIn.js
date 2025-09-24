@@ -30,9 +30,11 @@ export default function SignIn() {
 
             if (response.ok) {
                 toast.success("Sign-in successful!");
-                // For a real app, you would save the user data (e.g., in localStorage or a state management solution)
-                console.log("User data:", data);
-                navigate("/dashboard"); // Redirect to a protected page on success
+                // Persist logged-in user for later API calls (e.g., joining groups)
+                try {
+                    localStorage.setItem('user', JSON.stringify(data));
+                } catch (_) {}
+                navigate("/dashboard"); // Redirect to dashboard on success
             } else {
                 // Read the specific error message from the backend
                 toast.error(`${data.error}`);

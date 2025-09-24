@@ -13,7 +13,7 @@ export default function Hero() {
                     <h1 className="hero-heading" style={{fontSize:'2.8rem', fontWeight:800, margin:0}}>Don't go through it alone.</h1>
                     <p className="hero-lead" style={{fontSize:'1.05rem', margin:0, color:'rgba(255,255,255,0.9)'}}>A welcoming community for people navigating mental health challenges — share, learn, and connect with moderated support groups.</p>
                     <div style={{marginTop:12}}>
-                      <Link to="/groups" className="btn btn-primary" style={{marginRight:8}}>Join the community</Link>
+                      <Link to="/signup" className="btn btn-primary" style={{marginRight:8}}>Join the community</Link>
                       <Link to="/about" className="btn btn-ghost">Learn more</Link>
                     </div>
                 </div>

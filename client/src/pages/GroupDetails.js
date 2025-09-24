@@ -12,6 +12,7 @@ const GroupDetails = () => {
   const { id: groupId } = useParams();
   const navigate = useNavigate();
   const [group, setGroup] = useState(null);
+  const [memberCount, setMemberCount] = useState(0);
   const [posts, setPosts] = useState([]);
   const [joined, setJoined] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -19,13 +20,70 @@ const GroupDetails = () => {
   const [newPost, setNewPost] = useState({ header: "", body: "", links: "" });
 
   useEffect(() => {
-    fetchGroupDetails(groupId).then(setGroup);
+    fetchGroupDetails(groupId).then(async g => {
+      setGroup(g);
+      setMemberCount(Number(g.member_count ?? g.members ?? 0));
+      // detect if current user is a member
+      try {
+        const stored = localStorage.getItem('user');
+        const user = stored ? JSON.parse(stored) : null;
+        if (user?.id) {
+          const userGroups = await fetch(`http://localhost:5555/users/${user.id}/groups`).then(r=>r.json());
+          const isMember = Array.isArray(userGroups) && userGroups.some(ug => ug.id === Number(groupId));
+          setJoined(isMember);
+        }
+      } catch(_) {}
+    });
     fetchPosts(groupId).then(setPosts);
   }, [groupId]);
 
-  const handleJoin = () => {
-    // API call to join group (to be implemented)
-    setJoined(true);
+  const handleJoin = async () => {
+    const stored = localStorage.getItem('user');
+    const user = stored ? JSON.parse(stored) : null;
+    if (!user?.id) {
+      alert('Please sign in to join this group.');
+      navigate('/signin');
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5555/groups/${groupId}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id, role: 'member' })
+      });
+      if (res.status !== 201 && res.status !== 200) throw new Error('Failed');
+      setJoined(true);
+      // Refresh group details to reflect authoritative member_count
+      const fresh = await fetch(`http://localhost:5555/groups/${groupId}`).then(r=>r.json());
+      setGroup(fresh);
+      setMemberCount(Number(fresh.member_count ?? 0));
+    } catch (e) {
+      alert('Failed to join group');
+    }
+  };
+
+  const handleLeave = async () => {
+    const stored = localStorage.getItem('user');
+    const user = stored ? JSON.parse(stored) : null;
+    if (!user?.id) {
+      alert('Please sign in first.');
+      navigate('/signin');
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5555/groups/${groupId}/leave`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id })
+      });
+      if (!res.ok) throw new Error('Failed');
+      setJoined(false);
+      const fresh = await fetch(`http://localhost:5555/groups/${groupId}`).then(r=>r.json());
+      setGroup(fresh);
+      setMemberCount(Number(fresh.member_count ?? 0));
+    } catch (e) {
+      alert('Failed to leave group');
+    }
   };
 
   const handleAddPost = async (e) => {
@@ -70,10 +128,17 @@ const GroupDetails = () => {
 
       {/* Stats row: members, posts, join, create */}
       <div className="group-stats-row" style={{display: 'flex', alignItems: 'center', gap: '1em', margin: '1.2em 0 0 2em', fontSize: '1em', fontFamily: 'Poppins'}}>
-        <span style={{display: 'flex', alignItems: 'center', gap: '0.4em'}}><i className="fas fa-users"></i> {group.members} members</span>
+        <span style={{display: 'flex', alignItems: 'center', gap: '0.4em'}}><i className="fas fa-users"></i> {memberCount} members</span>
         <span style={{display: 'flex', alignItems: 'center', gap: '0.4em'}}><strong>{posts.length}</strong> posts</span>
           <div style={{marginLeft: '0.6em', display: 'flex', gap: '0.6em', alignItems: 'center'}}>
-          <button className={joined ? 'btn-joined' : 'btn btn-primary'} disabled={joined} onClick={handleJoin}>{joined ? "Joined" : "Join"}</button>
+          {!joined && (
+            <button className={'btn btn-primary'} onClick={handleJoin}>Join</button>
+          )}
+          {joined && (
+            <button className="button" style={{padding:'0.5em 1em', fontSize:'0.95em', borderRadius:'999px', fontFamily:'Poppins', display:'flex', alignItems:'center', gap:'0.4em', boxShadow:'0 2px 8px rgba(123,155,140,0.10)', background:'#ef4444', color:'#fff', fontWeight:600}} onClick={handleLeave}>
+              Leave
+            </button>
+          )}
           <button className="button" style={{padding:'0.5em 1em', fontSize:'0.95em', borderRadius:'999px', fontFamily:'Poppins', display:'flex', alignItems:'center', gap:'0.4em', boxShadow:'0 2px 8px rgba(123,155,140,0.10)', background:'var(--primary)', color:'var(--background)', fontWeight:600}} onClick={()=>setShowGuidelines(true)}>
             <span style={{fontSize:'1.05em'}}>+</span>
             <span style={{fontSize:'0.98em'}}>Create</span>

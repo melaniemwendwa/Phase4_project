@@ -1,9 +1,10 @@
 // API utility functions for events, messages, encouragements
+import { BASE_URL } from './apiBase';
 
 // In-memory post storage for MVP
 const postsStore = {};
 
-const BASE_URL = "http://localhost:5000";
+// Using shared BASE_URL (http://localhost:5555)
 
 export const fetchEvents = async groupId => {
   const res = await fetch(`${BASE_URL}/groups/${groupId}/events`);
@@ -48,36 +49,17 @@ export const createEncouragement = async (messageId, data) => {
 };
 
 
-// --- GroupDetails page API ---
-const healthGroups = [
-  { id: 1, name: "Stress Management", description: "Share strategies and support for managing stress in daily life.", members: 0 },
-  { id: 2, name: "Grief Support", description: "A safe space to process loss and grief with others who understand.", members: 0 },
-  { id: 3, name: "Addiction Recovery", description: "Support and resources for overcoming addiction and staying healthy.", members: 0 },
-  { id: 4, name: "Anxiety Support", description: "Connect with others to share experiences and coping skills for anxiety.", members: 0 },
-  { id: 5, name: "Depression Support", description: "Find encouragement and share your journey with depression.", members: 0 },
-  { id: 6, name: "Mindfulness & Meditation", description: "Learn and share mindfulness and meditation practices for mental wellness.", members: 0 },
-  { id: 7, name: "Trauma Healing", description: "A community for healing and growth after trauma.", members: 0 },
-  { id: 8, name: "Self-Esteem Boosters", description: "Share tips and stories to build self-esteem and confidence.", members: 0 },
-  { id: 9, name: "Youth Mental Health", description: "Support for young people navigating mental health challenges.", members: 0 },
-  { id: 10, name: "Parenting & Family", description: "Resources and support for parents and families facing mental health issues.", members: 0 },
-];
-
-// Export fetchGroups for use in frontend
+// --- Groups API ---
 export const fetchGroups = async () => {
-  return healthGroups;
+  const res = await fetch(`${BASE_URL}/groups`);
+  if (!res.ok) throw new Error('Failed to load groups');
+  return res.json();
 };
 
 export const fetchGroupDetails = async groupId => {
-  const group = healthGroups.find(g => g.id === Number(groupId));
-  if (group) {
-    return group;
-  }
-  // fallback for unknown group
-  return {
-    name: "Unknown Group",
-    description: "This group does not exist.",
-    members: 0,
-  };
+  const res = await fetch(`${BASE_URL}/groups/${groupId}`);
+  if (!res.ok) throw new Error('Failed to load group');
+  return res.json();
 };
 
 export const fetchPosts = async groupId => {
