@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fetchGroups } from '../api';
 import { Link } from "react-router-dom";
 
 export default function GroupList() {
@@ -13,54 +14,41 @@ export default function GroupList() {
   useEffect(() => {
     setLoading(true);
     setError("");
-    fetch("/groups")
-      .then((res) => res.json())
+    fetchGroups()
       .then((data) => setGroups(data))
       .catch(() => setError("Failed to load groups."))
       .finally(() => setLoading(false));
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
-    const method = editingGroup ? "PUT" : "POST";
-    const url = editingGroup ? `/groups/${editingGroup.id}` : "/groups";
-
-    fetch(url, {
-      method: method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        topic,
-        description,
-         meeting_times: meetingTimes,
-      }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to ${editingGroup ? "update" : "create"} group`);
-        return res.json();
-      })
-      .then((data) => {
-        if (editingGroup) {
-          setGroups(groups.map((g) => (g.id === data.id ? data : g)));
-          setEditingGroup(null);
-        } else {
-          setGroups([...groups, data]);
-        }
-        setTopic("");
-        setDescription("");
-        setMeetingTimes("");
-      })
-      .catch(() => setError(`Failed to ${editingGroup ? "update" : "create"} group.`));
+    try {
+      if (editingGroup) {
+        // Update group in static array
+        const updated = { ...editingGroup, topic, description, meeting_times: meetingTimes };
+        setGroups(groups.map((g) => (g.id === updated.id ? updated : g)));
+        setEditingGroup(null);
+      } else {
+        // Create group in static array
+        const newGroup = {
+          id: Date.now(),
+          topic,
+          description,
+          meeting_times: meetingTimes,
+        };
+        setGroups([...groups, newGroup]);
+      }
+      setTopic("");
+      setDescription("");
+      setMeetingTimes("");
+    } catch {
+      setError(`Failed to ${editingGroup ? "update" : "create"} group.`);
+    }
   };
-   const handleDelete = (id) => {
+  const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this group?")) {
-      fetch(`/groups/${id}`, { method: "DELETE" })
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to delete group");
-          setGroups(groups.filter((g) => g.id !== id));
-        })
-        .catch(() => setError("Failed to delete group."));
+      setGroups(groups.filter((g) => g.id !== id));
     }
   };
 

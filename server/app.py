@@ -2,10 +2,91 @@ from flask import request, jsonify, redirect, url_for
 from flask_cors import CORS
 
 from config import app, db
-from models import SupportGroup, Membership
+from models import SupportGroup, Membership, SessionEvent, GroupMessage, Encouragement
 
 # Enable CORS for React frontend
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+
+# --- Session/Event Routes ---
+from datetime import datetime
+
+@app.route('/groups/<int:group_id>/events', methods=['GET'])
+def get_events(group_id):
+    events = SessionEvent.query.filter_by(group_id=group_id).all()
+    return jsonify([e.to_dict() for e in events]), 200
+
+@app.route('/groups/<int:group_id>/events', methods=['POST'])
+def create_event(group_id):
+    data = request.get_json() or {}
+    event = SessionEvent(
+        group_id=group_id,
+        title=data.get('title'),
+        description=data.get('description'),
+        start_time=datetime.fromisoformat(data.get('start_time')),
+        end_time=datetime.fromisoformat(data.get('end_time')) if data.get('end_time') else None
+    )
+    db.session.add(event)
+    db.session.commit()
+    return jsonify(event.to_dict()), 201
+
+@app.route('/groups/<int:group_id>/events/<int:event_id>', methods=['PUT'])
+def update_event(group_id, event_id):
+    event = SessionEvent.query.filter_by(group_id=group_id, id=event_id).first_or_404()
+    data = request.get_json() or {}
+    if 'title' in data:
+        event.title = data['title']
+    if 'description' in data:
+        event.description = data['description']
+    if 'start_time' in data:
+        event.start_time = datetime.fromisoformat(data['start_time'])
+    if 'end_time' in data:
+        event.end_time = datetime.fromisoformat(data['end_time'])
+    db.session.commit()
+    return jsonify(event.to_dict()), 200
+
+@app.route('/groups/<int:group_id>/events/<int:event_id>', methods=['DELETE'])
+def delete_event(group_id, event_id):
+    event = SessionEvent.query.filter_by(group_id=group_id, id=event_id).first_or_404()
+    db.session.delete(event)
+    db.session.commit()
+    return '', 204
+
+# --- Group Messages/Discussion Board ---
+@app.route('/groups/<int:group_id>/messages', methods=['GET'])
+def get_messages(group_id):
+    messages = GroupMessage.query.filter_by(group_id=group_id).order_by(GroupMessage.timestamp.desc()).all()
+    return jsonify([m.to_dict() for m in messages]), 200
+
+@app.route('/groups/<int:group_id>/messages', methods=['POST'])
+def create_message(group_id):
+    data = request.get_json() or {}
+    msg = GroupMessage(
+        group_id=group_id,
+        user_id=data.get('user_id', 0),
+        content=data.get('content'),
+        timestamp=datetime.utcnow()
+    )
+    db.session.add(msg)
+    db.session.commit()
+    return jsonify(msg.to_dict()), 201
+
+# --- Feedback/Encouragement System ---
+@app.route('/messages/<int:message_id>/encouragements', methods=['GET'])
+def get_encouragements(message_id):
+    encouragements = Encouragement.query.filter_by(message_id=message_id).all()
+    return jsonify([e.to_dict() for e in encouragements]), 200
+
+@app.route('/messages/<int:message_id>/encouragements', methods=['POST'])
+def create_encouragement(message_id):
+    data = request.get_json() or {}
+    encouragement = Encouragement(
+        message_id=message_id,
+        user_id=data.get('user_id', 0),
+        type=data.get('type', 'upvote')
+    )
+    db.session.add(encouragement)
+    db.session.commit()
+    return jsonify(encouragement.to_dict()), 201
 
 with app.app_context():
     db.create_all()
