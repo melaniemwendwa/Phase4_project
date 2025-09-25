@@ -89,27 +89,18 @@ export const fetchUserGroups = async (userId) => {
 };
 
 export const fetchPosts = async groupId => {
-  if (!postsStore[groupId]) postsStore[groupId] = [];
-  return postsStore[groupId];
+  const res = await fetch(`${BASE_URL}/groups/${groupId}/posts`);
+  if (!res.ok) return [];
+  return res.json();
 };
 
 export const createPost = async (groupId, postData) => {
-  if (!postsStore[groupId]) postsStore[groupId] = [];
-  const newPost = {
-    id: Date.now(),
-    header: postData.header,
-    body: postData.body,
-    links: postData.links || [],
-    comments: [],
-    likes: 0,
-    shares: 0,
-    saves: 0,
-    liked: false,
-    shared: false,
-    saved: false,
-  };
-  postsStore[groupId].unshift(newPost);
-  return newPost;
+  const res = await fetch(`${BASE_URL}/groups/${groupId}/posts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(postData)
+  });
+  return res.json();
 };
 
 export const createComment = async (postId, content) => {

@@ -81,8 +81,11 @@ const GroupDetails = () => {
       body: newPost.body,
       links: newPost.links.split(",").map(l => l.trim()).filter(Boolean),
     };
-    const created = await createPost(groupId, postData);
-    setPosts([created, ...posts]);
+    await createPost(groupId, postData);
+    // reload from the posts store to avoid duplicate entries when createPost
+    // mutates the same in-memory array that `posts` references
+    const refreshed = await fetchPosts(groupId);
+    setPosts(refreshed);
     setShowModal(false);
     setNewPost({ header: "", body: "", links: "" });
   };
@@ -92,6 +95,7 @@ const GroupDetails = () => {
   if (!group) return <div>Loading...</div>;
 
   return (
+<<<<<<< HEAD
     <div className="community-page" style={{background: 'var(--background)', minHeight: '100vh', fontFamily: 'Poppins, Segoe UI, Arial, sans-serif', minWidth: '100vw'}}>
       {/* Go back button */}
       <div style={{margin: '2em 0 0 2em'}}>
@@ -108,9 +112,16 @@ const GroupDetails = () => {
         <div className="group-title-block" style={{display: 'flex', flexDirection: 'column', gap: '0.2em'}}>
           <div className="group-title" style={{fontSize: '2.2em', fontWeight: 800, color: 'var(--text)', fontFamily: 'Poppins'}}>{group.name}</div>
           <div className="group-subtitle" style={{fontSize: '1.05em', color: 'var(--titles)', fontWeight: 500}}>{group.name}</div>
+=======
+    <div className="community-page group-page">
+      <div className="container">
+        {/* Go back button */}
+        <div className="group-back">
+          <button className="button back-button" onClick={() => navigate("/groups")}>&larr; Go Back</button>
+>>>>>>> 9a90cd7 (Overall UI and Logic Haul)
         </div>
-      </div>
 
+<<<<<<< HEAD
       {/* Description */}
       <div className="group-description" style={{margin: '0.8em 0 0 2em', fontSize: '1.05em', color: 'var(--text)', fontFamily: 'Poppins', maxWidth: '900px'}}>{group.description}</div>
 
@@ -139,23 +150,44 @@ const GroupDetails = () => {
             <span style={{fontSize:'1.05em'}}>+</span>
             <span style={{fontSize:'0.98em'}}>Create</span>
           </button>
+=======
+        {/* Title block */}
+        <div className="group-header">
+          <div className="group-avatar-large">{group.initials || 'EA'}</div>
+          <div className="group-title-block">
+            <div className="group-title">{group.name}</div>
+            <div className="group-subtitle">{group.name}</div>
+          </div>
+>>>>>>> 9a90cd7 (Overall UI and Logic Haul)
         </div>
-      </div>
 
-      {/* Shared on header */}
-      <div className="posts" style={{maxWidth: '1200px', width: '100%', margin: '1.5em auto 0 auto', padding: '0 1em', fontFamily: 'Poppins'}}>
-        <div className="posts-header-row" style={{display: 'flex', alignItems: 'center', gap: '0.8em', marginBottom: '1em', justifyContent: 'flex-start'}}>
-          <FaLeaf style={{fontSize: '1.2rem', color: 'var(--accents)'}} />
-          <h3 style={{fontSize: '1.2em', fontWeight: 700, fontFamily: 'Poppins', margin: 0}}>Shared on {group.name}</h3>
-          <span style={{fontWeight: 400, fontSize: '0.95em', color: 'var(--titles)', marginLeft: '0.5em'}}>• Sorted by newest</span>
+        <div className="group-description">{group.description}</div>
+
+        {/* Stats row: members, posts, join, create */}
+        <div className="group-actions">
+          <div className="meta">
+            <span className="meta-item">{group.members} members</span>
+            <span className="meta-item"><strong>{posts.length}</strong> posts</span>
+          </div>
+          <div className="actions">
+            <button className={joined ? 'btn-joined' : 'btn btn-primary'} disabled={joined} onClick={handleJoin}>{joined ? "Joined" : "Join"}</button>
+            <button className="button button-create" onClick={()=>setShowGuidelines(true)}>
+              <span className="plus">+</span>
+              <span>Create</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Main content row: left = posts list, right = calendar + discussion (column) */}
-      <div style={{margin: '1em auto', maxWidth: '95%', padding: '0 1em'}}>
-        <div style={{display:'flex', flexDirection:'row', gap:'2em', alignItems:'flex-start'}}>
-          {/* Left: Posts column */}
-          <div className="posts-column" style={{flex:'1.6 1 0', minWidth:'420px'}}>
+        {/* Shared on header */}
+        <div className="posts-header">
+          <FaLeaf className="leaf-icon" />
+          <h3>Shared on {group.name}</h3>
+          <span className="sorted">• Sorted by newest</span>
+        </div>
+
+        {/* Main content row */}
+        <div className="group-layout">
+          <div className="posts-column">
             {posts.length === 0 ? (
               <div style={{fontFamily:'Poppins', color:'var(--text)', opacity:0.85, textAlign:'center', padding:'2em', background:'var(--card-bg)', borderRadius:'16px', boxShadow:'0 6px 20px rgba(0,0,0,0.04)'}}>
                 <div style={{fontSize:'1.2em', fontWeight:600, marginBottom:'0.5em'}}>No member posts yet.</div>
@@ -164,8 +196,14 @@ const GroupDetails = () => {
             ) : (
               posts.map(post => (
                 <div key={post.id} className="post-card" style={{background:'var(--card-bg)', borderRadius:'18px', boxShadow:'0 6px 18px rgba(0,0,0,0.05)', padding:'1.6em', marginBottom:'1.6em', display:'flex', flexDirection:'column', gap:'0.7em'}}>
-                  <div style={{fontWeight:700, fontSize:'1.15em', color:'var(--text)'}}>{post.header}</div>
-                  <div style={{margin:'0.5em 0', color:'var(--text)', fontSize:'1.03em'}}>{post.body}</div>
+                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:'1rem'}}>
+                    <div style={{display:'flex', flexDirection:'column'}}>
+                      <div style={{fontWeight:700, fontSize:'1.15em', color:'var(--text)'}}>{post.header}</div>
+                      <div style={{fontSize:'0.9rem', color:'#6B7280'}}>{post.anonymous ? 'Anonymous' : `Member #${post.user_id || ''}`}</div>
+                    </div>
+                    <div style={{fontSize:'0.9rem', color:'#9CA3AF'}}>{post.timestamp ? new Date(post.timestamp).toLocaleString() : ''}</div>
+                  </div>
+                  <div style={{margin:'0.5em 0', color:'var(--text)', fontSize:'1.03em', whiteSpace:'pre-wrap'}}>{post.body}</div>
                   {post.links && post.links.length > 0 && (
                     <div style={{marginBottom:'0.5em'}}>
                       {post.links.map((link, idx) => (
@@ -178,7 +216,7 @@ const GroupDetails = () => {
                       <FaRegThumbsUp size={20} /> <span>{post.likes || 0}</span>
                     </button>
                     <button className="icon-btn" style={{background:'none', border:'none', color:'var(--primary)', cursor:'pointer', fontSize:'1em', display:'flex', alignItems:'center', gap:'0.3em'}}>
-                      <FaRegCommentDots size={20} /> <span>{post.comments.length}</span>
+                      <FaRegCommentDots size={20} /> <span>{(post.comments || []).length}</span>
                     </button>
                   </div>
                 </div>
@@ -216,13 +254,25 @@ const GroupDetails = () => {
             <Modal isOpen={showModal} onClose={()=>setShowModal(false)}>
               <div style={{fontFamily: 'Poppins', padding: '1em 0'}}>
                 <h2 style={{marginBottom:'1em', fontWeight:700, fontFamily: 'Poppins', fontSize:'1.25em', color:'var(--primary)'}}>Create a Post</h2>
-                <form onSubmit={handleAddPost} style={{display:'flex', flexDirection:'column', gap:'0.9rem', fontFamily: 'Poppins'}}>
-                  <input className="form-control" type="text" placeholder="Header (e.g. What's on your mind?)" value={newPost.header} onChange={e=>setNewPost({...newPost, header:e.target.value})} required />
-                  <textarea className="form-control form-textarea" placeholder="Body (share your story, thoughts, or encouragement)" value={newPost.body} onChange={e=>setNewPost({...newPost, body:e.target.value})} rows={5} required />
-                  <input className="form-control" type="text" placeholder="Links (comma separated URLs, optional)" value={newPost.links} onChange={e=>setNewPost({...newPost, links:e.target.value})} />
-                  <div style={{display:'flex', justifyContent:'flex-end', gap:'0.6rem'}}>
+                <form onSubmit={handleAddPost} className="ms-form">
+                  <div className="ms-row">
+                    <label className="ms-label" htmlFor="post-header">Header</label>
+                    <input id="post-header" className="form-control ms-input" type="text" placeholder="What's on your mind?" value={newPost.header} onChange={e=>setNewPost({...newPost, header:e.target.value})} required />
+                  </div>
+
+                  <div className="ms-row">
+                    <label className="ms-label" htmlFor="post-body">Body</label>
+                    <textarea id="post-body" className="form-control ms-textarea" placeholder="Share your story, thoughts, or encouragement" value={newPost.body} onChange={e=>setNewPost({...newPost, body:e.target.value})} rows={5} required />
+                  </div>
+
+                  <div className="ms-row">
+                    <label className="ms-label" htmlFor="post-links">Links (optional)</label>
+                    <input id="post-links" className="form-control ms-input" type="text" placeholder="Comma separated URLs" value={newPost.links} onChange={e=>setNewPost({...newPost, links:e.target.value})} />
+                  </div>
+
+                  <div className="ms-actions">
                     <button type="button" className="btn btn-ghost btn-small" onClick={()=>setShowModal(false)}>Cancel</button>
-                    <button className="btn btn-primary" type="submit">Post</button>
+                    <button className="btn btn-primary ms-primary" type="submit">Post</button>
                   </div>
                 </form>
               </div>

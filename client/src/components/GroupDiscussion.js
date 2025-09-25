@@ -8,6 +8,7 @@ export default function GroupDiscussion() {
   const { id: groupId } = useParams();
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
+  const [anonymous, setAnonymous] = useState(false);
   const { user } = useContext(AuthContext);
   const [encs, setEncs] = useState({});
   const listRef = useRef(null);
@@ -25,7 +26,7 @@ export default function GroupDiscussion() {
     e.preventDefault();
     if (!newMsg.trim()) return;
     const userId = user?.id || 1; // fallback to 1 for dev when not available
-    await createMessage(groupId, { user_id: userId, content: newMsg.trim() });
+    await createMessage(groupId, { user_id: userId, content: newMsg.trim(), anonymous });
     setNewMsg("");
     fetchMessages(groupId).then(setMessages);
   };
@@ -72,9 +73,13 @@ export default function GroupDiscussion() {
         ))}
       </div>
 
-      <form className="chat-input" onSubmit={handleSend}>
-        <input aria-label="Type a message" value={newMsg} onChange={e => setNewMsg(e.target.value)} placeholder="Type a message..." />
-        <button type="submit">Send</button>
+      <form className="chat-input ms-form" onSubmit={handleSend}>
+        <input aria-label="Type a message" className="ms-input" value={newMsg} onChange={e => setNewMsg(e.target.value)} placeholder="Type a message..." />
+        <label className="ms-ctrl">
+          <input type="checkbox" checked={anonymous} onChange={e => setAnonymous(e.target.checked)} />
+          <span className="ms-ctrl-label">Post anonymously</span>
+        </label>
+        <button type="submit" className="btn btn-primary ms-primary">Send</button>
       </form>
     </div>
   );

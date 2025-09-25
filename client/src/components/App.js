@@ -17,7 +17,7 @@ function App() {
   const { user } = useContext(AuthContext);
   return (
     <BrowserRouter>
-      <main className="font-poppins">
+      <main className="font-poppins" style={{minHeight: '100vh', display: 'flex', flexDirection: 'column'}}>
         <nav className="top-0 left-0 fixed w-full z-20">
           <NavBar />
         </nav>

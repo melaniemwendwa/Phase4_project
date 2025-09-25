@@ -11,6 +11,7 @@ class User(db.Model, SerializerMixin):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String, unique=True, nullable=False)
     email = db.Column(db.String, unique=True, nullable=False)
     _password_hash = db.Column(db.String)
 
@@ -38,7 +39,8 @@ class User(db.Model, SerializerMixin):
     def to_dict(self):
         return {
             "id" : self.id,
-            "email": self.email
+            "email": self.email,
+            "username": self.username
         }
 
 #support group model
@@ -106,6 +108,7 @@ class GroupMessage(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("support_groups.id"), nullable=False)
     user_id = db.Column(db.Integer, nullable=False)  # placeholder for now
+    anonymous = db.Column(db.Boolean, nullable=False, default=False)
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
 
@@ -114,6 +117,7 @@ class GroupMessage(db.Model, SerializerMixin):
             "id": self.id,
             "group_id": self.group_id,
             "user_id": self.user_id,
+            "anonymous": bool(self.anonymous),
             "content": self.content,
             "timestamp": self.timestamp.isoformat() if self.timestamp else None,
         }
@@ -133,4 +137,37 @@ class Encouragement(db.Model, SerializerMixin):
             "message_id": self.message_id,
             "user_id": self.user_id,
             "type": self.type,
+        }
+
+
+# --- Support Group Post (Feed) Model ---
+class SupportGroupPost(db.Model, SerializerMixin):
+    __tablename__ = "support_group_posts"
+
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey("support_groups.id"), nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
+    header = db.Column(db.String(255), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    links = db.Column(db.Text, nullable=True)  # JSON-encoded list
+    timestamp = db.Column(db.DateTime, nullable=False)
+
+    def to_dict(self):
+        import json
+        try:
+            links = json.loads(self.links) if self.links else []
+        except Exception:
+            links = []
+        return {
+            "id": self.id,
+            "group_id": self.group_id,
+            "user_id": self.user_id,
+            "header": self.header,
+            "body": self.body,
+            "links": links,
+            # default shapes expected by the frontend
+            "comments": [],
+            "likes": 0,
+            "anonymous": True if (self.user_id == 0 or self.user_id is None) else False,
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
         }

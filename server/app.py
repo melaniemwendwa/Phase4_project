@@ -2,7 +2,9 @@ from flask import request, jsonify, redirect, url_for
 from flask_cors import CORS
 
 from config import app, db
-from models import SupportGroup, Membership, User, SessionEvent, GroupMessage, Encouragement
+from models import SupportGroup, Membership, SessionEvent, GroupMessage, Encouragement, SupportGroupPost
+from models import User
+from config import bcrypt
 
 # Enable CORS for React frontend
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
@@ -63,12 +65,68 @@ def create_message(group_id):
     msg = GroupMessage(
         group_id=group_id,
         user_id=data.get('user_id', 0),
+        anonymous=bool(data.get('anonymous', False)),
         content=data.get('content'),
         timestamp=datetime.utcnow()
     )
     db.session.add(msg)
     db.session.commit()
     return jsonify(msg.to_dict()), 201
+
+
+# --- Support group posts (feed) ---
+@app.route('/groups/<int:group_id>/posts', methods=['GET'])
+def get_posts(group_id):
+    posts = SupportGroupPost.query.filter_by(group_id=group_id).order_by(SupportGroupPost.timestamp.desc()).all()
+    return jsonify([p.to_dict() for p in posts]), 200
+
+
+@app.route('/groups/<int:group_id>/posts', methods=['POST'])
+def create_post(group_id):
+    data = request.get_json() or {}
+    import json
+    from datetime import datetime
+    links = data.get('links', [])
+    if not isinstance(links, str):
+        links = json.dumps(links)
+    post = SupportGroupPost(
+        group_id=group_id,
+        user_id=data.get('user_id', 0),
+        header=data.get('header', '') or '',
+        body=data.get('body', '') or '',
+        links=links,
+        timestamp=datetime.utcnow()
+    )
+    db.session.add(post)
+    db.session.commit()
+    return jsonify(post.to_dict()), 201
+
+
+# --- Authentication / Users ---
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.get_json() or {}
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+
+    if not username or not email or not password:
+        return jsonify({"error": "username, email and password are required"}), 400
+
+    # unique checks
+    if User.query.filter_by(email=email).first():
+        return jsonify({"error": "Email already registered"}), 400
+    if User.query.filter_by(username=username).first():
+        return jsonify({"error": "Username already taken"}), 400
+
+    user = User(
+        username=username,
+        email=email,
+        _password_hash=bcrypt.generate_password_hash(password).decode('utf-8')
+    )
+    db.session.add(user)
+    db.session.commit()
+    return jsonify(user.to_dict()), 201
 
 # --- Feedback/Encouragement System ---
 @app.route('/messages/<int:message_id>/encouragements', methods=['GET'])
@@ -94,40 +152,6 @@ with app.app_context():
 @app.route('/')
 def home():
     return redirect(url_for('get_groups'))
-
-@app.route('/signup', methods=['POST'])
-def signup():
-    data = request.get_json() or {}
-    email = data.get('email')
-    password = data.get('password')
-    user = User.query.filter(User.email == email).first()
-
-    if not email or not password:
-        return jsonify({"error": 'Email and password are required'}), 400
-    
-    if user:
-        return jsonify({"error": 'An account with this email already exists'}), 400
-    
-    new_user = User(email=email)
-    new_user.password_hash = password
-
-    db.session.add(new_user)
-    db.session.commit()
-
-    return jsonify({'message': 'User created succesfully', 'user_id': new_user.id}), 201
-
-@app.route('/signin', methods=["POST"])
-def signin():
-    data = request.get_json() or {}
-    email = data.get('email')
-    password = data.get('password')
-
-    user = User.query.filter(User.email == email).first()
-
-    if user and user.authenticate(password):
-        return jsonify(user.to_dict()), 200
-    else:
-        return jsonify({"error": 'Invalid email or password'}), 401
 
 @app.route('/groups', methods=['GET'])
 def get_groups():
@@ -205,6 +229,7 @@ def join_group(group_id):
         'member_count': updated_count
     }), 201
 
+<<<<<<< HEAD
 @app.route('/groups/<int:group_id>/leave', methods=['POST'])
 def leave_group(group_id):
     data = request.get_json() or {}
@@ -232,6 +257,10 @@ def get_user_groups(user_id):
     groups = SupportGroup.query.filter(SupportGroup.id.in_(group_ids)).all()
     return jsonify([g.to_dict() for g in groups]), 200
 
+=======
+>>>>>>> 9a90cd7 (Overall UI and Logic Haul)
 
 if __name__ == '__main__':
-    app.run(port=5555, debug=True)
+    import os
+    port = int(os.environ.get('FLASK_RUN_PORT', 5555))
+    app.run(port=port, debug=True)

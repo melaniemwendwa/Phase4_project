@@ -2,7 +2,7 @@ import { WhatWeAreAbout, HowItWorks, HearFromOurCommunity } from "../../data/dat
 
 export default function AboutUs() {
     return (
-        <div id="about" style={{background:'var(--bg)', padding:'3rem 0'}}>
+        <div id="about" style={{background: '#f4f1e8', padding:'3rem 0'}}>
             <div style={{maxWidth:1100, margin:'0 auto', display:'grid', gap:24}}>
                 <header style={{textAlign:'center'}}>
                     <h2 style={{margin:0, fontSize:'1.6rem', fontWeight:800, color:'var(--text)'}}>What we're about</h2>

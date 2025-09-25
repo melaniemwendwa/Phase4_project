@@ -60,7 +60,7 @@ export default function GroupList() {
   };
 
   return (
-    <div className="support-groups">
+    <div className="support-groups" style={{background: 'var(--bg)'}}>
       <h2>{editingGroup ? "Edit Group" : "Create a New Group"}</h2>
       {error && <div className="alert">{error}</div>}
       <form onSubmit={handleSubmit} className="group-form">

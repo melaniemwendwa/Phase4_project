@@ -46,7 +46,7 @@ export default function NavBar() {
     }
 
         return (
-        <header className="site-header" >
+        <header className="site-header">
             <div className="nav-inner">
                 <NavLink to="/" className="site-logo">
                     <img src={`${process.env.PUBLIC_URL || ''}/logo.svg`} alt="OpenCircle" 
@@ -70,15 +70,26 @@ export default function NavBar() {
                                     aria-haspopup="true"
                                     style={{color: 'var(--text)'}}
                                 >
-                                    {user?.username || user?.name || 'Profile'} ▾
+                                    {(() => {
+                                        // Prefer username, then name, then email local-part, then fallback
+                                        if (user?.username) return user.username;
+                                        if (user?.name) return user.name;
+                                        if (user?.email) return user.email.split('@')[0];
+                                        return 'Profile';
+                                    })()} ▾
                                 </button>
 
                                 {profileOpen && (
-                                    <div className="profile-dropdown" onClick={(e)=>e.stopPropagation()} style={{position: 'absolute', right:0, top:'calc(100% + 8px)', background: 'var(--primary)', color: 'var(--background)', borderRadius: 10, boxShadow: '0 8px 24px rgba(2,6,23,0.12)', padding: '0.5rem', minWidth: 160, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 6}}>
-                                        <NavLink to={'/dashboard'} onClick={() => setProfileOpen(false)} style={{padding: '0.45rem 0.8rem', borderRadius:6, color:'inherit', textDecoration:'none'}}>
-                                            {user?.email || 'Profile'}
-                                        </NavLink>
-                                        <button style={{textAlign:'left', padding: '0.45rem 0.8rem', borderRadius:6, color:'inherit', background:'transparent', border:'none'}} onClick={()=>{ setProfileOpen(false); clearUser(); navigate('/signin'); }}>Logout</button>
+                                    <div className="profile-dropdown" onClick={(e)=>e.stopPropagation()} style={{position: 'absolute', right:0, top:'calc(100% + 8px)', borderRadius: 10, boxShadow: '0 8px 24px rgba(2,6,23,0.12)', padding: 0, minWidth: 220, zIndex: 60, overflow: 'hidden'}}>
+                                        <div style={{background: 'var(--primary)', color: 'var(--background)', padding: '0.6rem 0.8rem', borderBottom: '1px solid rgba(255,255,255,0.06)'}}>
+                                            <div style={{fontWeight:700}}>{user?.username || (user?.email ? user.email.split('@')[0] : 'Profile')}</div>
+                                            {user?.email && <div style={{fontSize:12, opacity:0.9}}>{user.email}</div>}
+                                        </div>
+                                        <div style={{display: 'flex', flexDirection: 'column', background: 'var(--card-bg)'}}>
+                                            <NavLink to={'/dashboard'} onClick={() => setProfileOpen(false)} style={{padding: '0.6rem 0.9rem', border: 'none', textDecoration: 'none', color: 'var(--text)'}}>Dashboard</NavLink>
+                                            <NavLink to={'/groups'} onClick={() => setProfileOpen(false)} style={{padding: '0.6rem 0.9rem', border: 'none', textDecoration: 'none', color: 'var(--text)'}}>Groups</NavLink>
+                                            <button style={{textAlign:'left', padding: '0.6rem 0.9rem', border: 'none', background:'transparent', color:'var(--text)', cursor:'pointer'}} onClick={()=>{ setProfileOpen(false); clearUser(); navigate('/signin'); }}>Logout</button>
+                                        </div>
                                     </div>
                                 )}
                             </div>

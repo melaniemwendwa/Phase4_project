@@ -8,20 +8,19 @@ from faker import Faker
 
 # Local imports
 from app import app
-from models import db, SupportGroup, User, Membership # Import User and Membership
+from models import db, SupportGroup, User, Membership, SessionEvent, GroupMessage, SupportGroupPost
 from config import bcrypt # Import bcrypt to hash passwords
 
 if __name__ == '__main__':
     fake = Faker()
     with app.app_context():
         print("Starting seed...")
-        
-        # Cleanup
-        print("Clearing database...")
-        SupportGroup.query.delete()
-        User.query.delete()
-        Membership.query.delete()
-        db.session.commit()
+
+        # Recreate schema to ensure new models/columns exist
+        print("Recreating database schema (drop_all + create_all)...")
+        db.drop_all()
+        db.create_all()
+        print("Schema recreated.")
 
         # Seed code goes here!
         # Defining my support groups manually
@@ -40,6 +39,32 @@ if __name__ == '__main__':
                 "topic": "Stress Management",
                 "description": "Learn practical ways to reduce stress in daily life.",
                 "meeting_times": "Every Friday at 4 PM"
+            }
+            ,
+            {
+                "topic": "Sleep Hygiene",
+                "description": "Tips and routines to improve sleep quality.",
+                "meeting_times": "Tuesdays at 8 PM"
+            },
+            {
+                "topic": "Mindfulness & Meditation",
+                "description": "Guided practices and reflections to build awareness.",
+                "meeting_times": "Thursdays at 7 PM"
+            },
+            {
+                "topic": "Grief Support",
+                "description": "A compassionate place to share and process loss.",
+                "meeting_times": "Sundays at 3 PM"
+            },
+            {
+                "topic": "Chronic Pain Coping",
+                "description": "Strategies to live better with chronic pain.",
+                "meeting_times": "Mondays at 2 PM"
+            },
+            {
+                "topic": "Eating Habits & Wellness",
+                "description": "Support around mindful eating and body acceptance.",
+                "meeting_times": "Wednesdays at 5 PM"
             }
         ]
 
@@ -63,6 +88,7 @@ if __name__ == '__main__':
             print("Seeding users...")
             for i in range(10):  # Create 10 test users
                 user = User(
+                    username=fake.user_name(),
                     email=fake.email(),
                     _password_hash=bcrypt.generate_password_hash('password').decode('utf-8')
                 )
@@ -91,6 +117,55 @@ if __name__ == '__main__':
                     db.session.add(membership)
             db.session.commit()
             print("Memberships added successfully!")
+
+        # Create posts, events, and messages for each group
+        print("Seeding posts, events, and messages for each group...")
+        from datetime import datetime, timedelta
+        import json
+
+        all_groups = SupportGroup.query.all()
+        all_users = User.query.all()
+
+        for group in all_groups:
+            # pick 2 users as authors
+            authors = choices(all_users, k=2)
+            # create two posts
+            for i, author in enumerate(authors):
+                post = SupportGroupPost(
+                    group_id=group.id,
+                    user_id=author.id,
+                    header=f"{group.topic} update #{i+1}",
+                    body=fake.paragraph(nb_sentences=4),
+                    links=json.dumps([fake.url()]) if randint(0,1) else json.dumps([]),
+                    timestamp=datetime.utcnow() - timedelta(days=randint(0,7), hours=randint(0,23))
+                )
+                db.session.add(post)
+
+            # create one event per group
+            start = datetime.utcnow() + timedelta(days=randint(1,10))
+            event = SessionEvent(
+                group_id=group.id,
+                title=f"{group.topic} session",
+                description=fake.sentence(nb_words=8),
+                start_time=start,
+                end_time=start + timedelta(hours=1)
+            )
+            db.session.add(event)
+
+            # create some messages (fake chat)
+            for m in range(randint(2,5)):
+                usr = choices(all_users, k=1)[0]
+                msg = GroupMessage(
+                    group_id=group.id,
+                    user_id=usr.id,
+                    anonymous=False,
+                    content=fake.sentence(nb_words=randint(3,12)),
+                    timestamp=datetime.utcnow() - timedelta(minutes=randint(1,2000))
+                )
+                db.session.add(msg)
+
+        db.session.commit()
+        print("Posts, events and messages seeded for each group.")
 
 
 if __name__ == '__main__':
