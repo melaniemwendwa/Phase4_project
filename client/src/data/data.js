@@ -1,6 +1,6 @@
 export const NavLinks = {
     'Home': '/',
-    'Groups': '/groups',
+    'About': '/info',
     'Dashboard': '/dashboard',
 }
 
