@@ -185,12 +185,25 @@ def join_group(group_id):
 
     existing = Membership.query.filter_by(group_id=group.id, user_id=user_id).first()
     if existing:
-        return jsonify({'message': 'already a member', 'membership_id': existing.id, 'role': existing.role}), 200
+        current_count = Membership.query.filter_by(group_id=group.id).count()
+        return jsonify({
+            'message': 'already a member',
+            'membership_id': existing.id,
+            'role': existing.role,
+            'member_count': current_count
+        }), 200
 
     membership = Membership(group_id=group.id, user_id=user_id, role=role)
     db.session.add(membership)
     db.session.commit()
-    return jsonify({'id': membership.id, 'group_id': group.id, 'user_id': user_id, 'role': role}), 201
+    updated_count = Membership.query.filter_by(group_id=group.id).count()
+    return jsonify({
+        'id': membership.id,
+        'group_id': group.id,
+        'user_id': user_id,
+        'role': role,
+        'member_count': updated_count
+    }), 201
 
 @app.route('/groups/<int:group_id>/leave', methods=['POST'])
 def leave_group(group_id):
@@ -200,10 +213,12 @@ def leave_group(group_id):
         return jsonify({'error': 'user_id is required'}), 400
     membership = Membership.query.filter_by(group_id=group_id, user_id=user_id).first()
     if not membership:
-        return jsonify({'message': 'not a member'}), 200
+        current_count = Membership.query.filter_by(group_id=group_id).count()
+        return jsonify({'message': 'not a member', 'member_count': current_count}), 200
     db.session.delete(membership)
     db.session.commit()
-    return jsonify({'message': 'left group'}), 200
+    updated_count = Membership.query.filter_by(group_id=group_id).count()
+    return jsonify({'message': 'left group', 'member_count': updated_count}), 200
 
 
 @app.route('/users/<int:user_id>/groups', methods=['GET'])

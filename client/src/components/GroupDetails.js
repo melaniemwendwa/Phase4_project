@@ -1,39 +1,39 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
+import { fetchGroupDetails, joinGroup } from "../api";
+import { AuthContext } from "../context/AuthProvider";
 
 export default function GroupDetails() {
   const { id } = useParams();
+  const { user } = useContext(AuthContext);
   const [group, setGroup] = useState(null);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState("");
+  const [joined, setJoined] = useState(false);
 
   useEffect(() => {
     setError("");
-    fetch(`/groups/${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load group");
-        return res.json();
+    fetchGroupDetails(id)
+      .then((data) => {
+        setGroup(data);
       })
-      .then(setGroup)
       .catch(() => setError("Failed to load group details"));
   }, [id]);
 
   const handleJoin = () => {
+    if (!user) {
+      setError("Please sign in to join groups.");
+      return;
+    }
+    if (joined) return;
     setJoining(true);
     setError("");
-    fetch(`/groups/${id}/join`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: 1, role: "member" }), // placeholder current user
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to join");
-        return res.json();
+    joinGroup(id, { user_id: user.id, role: "member" })
+      .then((resp) => {
+        setJoined(true);
+        setGroup((g) => g ? { ...g, member_count: (g.member_count || 0) + (resp && resp.message === 'already a member' ? 0 : 1) } : g);
       })
-      .then(() => {
-        alert("Joined group!");
-      })
-            .catch(() => setError("Failed to join group"))
+      .catch(() => setError("Failed to join group"))
       .finally(() => setJoining(false));
   };
 
@@ -45,8 +45,9 @@ export default function GroupDetails() {
       <h2>{group.topic}</h2>
       <p>{group.description}</p>
       <p><b>Meeting times:</b> {group.meeting_times}</p>
-      <button onClick={handleJoin} disabled={joining}>
-        {joining ? "Joining..." : "Join Group"}
+      <p><b>Members:</b> {group.member_count ?? 0}</p>
+      <button onClick={handleJoin} disabled={joining || joined}>
+        {joined ? "Joined" : (joining ? "Joining..." : "Join Group")}
       </button>
     </div>
   );

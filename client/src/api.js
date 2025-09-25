@@ -62,6 +62,32 @@ export const fetchGroupDetails = async groupId => {
   return res.json();
 };
 
+export const joinGroup = async (groupId, { user_id, role = 'member' }) => {
+  const res = await fetch(`${BASE_URL}/groups/${groupId}/join`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id, role })
+  });
+  if (!res.ok) throw new Error('Failed to join group');
+  return res.json();
+};
+
+export const leaveGroup = async (groupId, { user_id }) => {
+  const res = await fetch(`${BASE_URL}/groups/${groupId}/leave`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id })
+  });
+  if (!res.ok) throw new Error('Failed to leave group');
+  return res.json();
+};
+
+export const fetchUserGroups = async (userId) => {
+  const res = await fetch(`${BASE_URL}/users/${userId}/groups`);
+  if (!res.ok) throw new Error('Failed to load user groups');
+  return res.json();
+};
+
 export const fetchPosts = async groupId => {
   if (!postsStore[groupId]) postsStore[groupId] = [];
   return postsStore[groupId];

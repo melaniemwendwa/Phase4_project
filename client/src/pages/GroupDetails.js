@@ -1,16 +1,18 @@
 // ...existing code...
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import { FaRegThumbsUp, FaRegCommentDots, FaLeaf } from "react-icons/fa";
 // import API functions (to be implemented)
-import { fetchGroupDetails, fetchPosts, createPost } from "../api";
+import { fetchGroupDetails, fetchPosts, createPost, joinGroup, leaveGroup, fetchUserGroups } from "../api";
 import GroupCalendar from "../components/GroupCalendar";
 import GroupDiscussion from "../components/GroupDiscussion";
+import { AuthContext } from "../context/AuthProvider";
 
 const GroupDetails = () => {
   const { id: groupId } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [group, setGroup] = useState(null);
   const [posts, setPosts] = useState([]);
   const [joined, setJoined] = useState(false);
@@ -23,9 +25,53 @@ const GroupDetails = () => {
     fetchPosts(groupId).then(setPosts);
   }, [groupId]);
 
-  const handleJoin = () => {
-    // API call to join group (to be implemented)
-    setJoined(true);
+  // Detect if current user has already joined this group
+  useEffect(() => {
+    let active = true;
+    async function checkMembership() {
+      if (!user) { setJoined(false); return; }
+      try {
+        const myGroups = await fetchUserGroups(user.id);
+        if (!active) return;
+        const isMember = (myGroups || []).some(g => String(g.id) === String(groupId));
+        setJoined(isMember);
+      } catch (_) {
+        if (!active) return;
+        setJoined(false);
+      }
+    }
+    checkMembership();
+    return () => { active = false };
+  }, [user, groupId]);
+
+  const handleJoin = async () => {
+    // Require authentication to join
+    if (!user) {
+      // Redirect to sign in if not authenticated
+      navigate("/signin");
+      return;
+    }
+    if (joined) return;
+    try {
+      const resp = await joinGroup(groupId, { user_id: user.id, role: "member" });
+      setJoined(true);
+      // Prefer server-returned member_count if available; otherwise increment
+      setGroup((g) => g ? { ...g, member_count: resp && typeof resp.member_count === 'number' ? resp.member_count : ((g.member_count || 0) + 1) } : g);
+      // Optionally navigate to dashboard; for toggle UX, we stay on page
+    } catch (e) {
+      // No-op here; could surface a toast/error UI if desired
+    }
+  };
+
+  const handleLeave = async () => {
+    if (!user) { navigate('/signin'); return; }
+    try {
+      const resp = await leaveGroup(groupId, { user_id: user.id });
+      setJoined(false);
+      setGroup((g) => g ? { ...g, member_count: resp && typeof resp.member_count === 'number' ? resp.member_count : Math.max(0, (g.member_count || 0) - 1) } : g);
+    } catch (e) {
+      // Optionally show error
+    }
   };
 
   const handleAddPost = async (e) => {
@@ -52,7 +98,7 @@ const GroupDetails = () => {
         <button className="button cancel" style={{fontFamily: 'Poppins', background: 'transparent', 
           color: 'var(--text)', borderRadius: '999px', fontWeight: 600, fontSize: '1em', 
           padding: '0.7em 2em', boxShadow: '0 2px 8px rgba(232, 168, 124, 0.12)'}}
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/groups")}
         >&larr; Go Back</button>
       </div>
 
@@ -70,10 +116,25 @@ const GroupDetails = () => {
 
       {/* Stats row: members, posts, join, create */}
       <div className="group-stats-row" style={{display: 'flex', alignItems: 'center', gap: '1em', margin: '1.2em 0 0 2em', fontSize: '1em', fontFamily: 'Poppins'}}>
-        <span style={{display: 'flex', alignItems: 'center', gap: '0.4em'}}><i className="fas fa-users"></i> {group.members} members</span>
+        <span style={{display: 'flex', alignItems: 'center', gap: '0.4em'}}><i className="fas fa-users"></i> {group.member_count ?? 0} members</span>
         <span style={{display: 'flex', alignItems: 'center', gap: '0.4em'}}><strong>{posts.length}</strong> posts</span>
           <div style={{marginLeft: '0.6em', display: 'flex', gap: '0.6em', alignItems: 'center'}}>
-          <button className={joined ? 'btn-joined' : 'btn btn-primary'} disabled={joined} onClick={handleJoin}>{joined ? "Joined" : "Join"}</button>
+          {joined ? (
+            <button
+              className="btn btn-danger"
+              style={{background:'#ef4444', color:'#fff', borderRadius:'999px', padding:'0.5em 1em'}}
+              onClick={handleLeave}
+            >
+              Leave
+            </button>
+          ) : (
+            <button
+              className="btn btn-primary"
+              onClick={handleJoin}
+            >
+              Join
+            </button>
+          )}
           <button className="button" style={{padding:'0.5em 1em', fontSize:'0.95em', borderRadius:'999px', fontFamily:'Poppins', display:'flex', alignItems:'center', gap:'0.4em', boxShadow:'0 2px 8px rgba(123,155,140,0.10)', background:'var(--primary)', color:'var(--background)', fontWeight:600}} onClick={()=>setShowGuidelines(true)}>
             <span style={{fontSize:'1.05em'}}>+</span>
             <span style={{fontSize:'0.98em'}}>Create</span>
