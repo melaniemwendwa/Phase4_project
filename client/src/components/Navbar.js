@@ -75,7 +75,9 @@ export default function NavBar() {
 
                                 {profileOpen && (
                                     <div className="profile-dropdown" onClick={(e)=>e.stopPropagation()} style={{position: 'absolute', right:0, top:'calc(100% + 8px)', background: 'var(--primary)', color: 'var(--background)', borderRadius: 10, boxShadow: '0 8px 24px rgba(2,6,23,0.12)', padding: '0.5rem', minWidth: 160, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 6}}>
-                                        <NavLink to={'/dashboard'} onClick={() => setProfileOpen(false)} style={{padding: '0.45rem 0.8rem', borderRadius:6, color:'inherit', textDecoration:'none'}}>Profile</NavLink>
+                                        <NavLink to={'/dashboard'} onClick={() => setProfileOpen(false)} style={{padding: '0.45rem 0.8rem', borderRadius:6, color:'inherit', textDecoration:'none'}}>
+                                            {user?.email || 'Profile'}
+                                        </NavLink>
                                         <button style={{textAlign:'left', padding: '0.45rem 0.8rem', borderRadius:6, color:'inherit', background:'transparent', border:'none'}} onClick={()=>{ setProfileOpen(false); clearUser(); navigate('/signin'); }}>Logout</button>
                                     </div>
                                 )}
