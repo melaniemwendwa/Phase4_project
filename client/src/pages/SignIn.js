@@ -1,9 +1,11 @@
 import toast from "react-hot-toast";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from '../context/AuthProvider';
 
 export default function SignIn() {
     const navigate = useNavigate();
+    const { setUser } = useContext(AuthContext);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
@@ -32,7 +34,8 @@ export default function SignIn() {
                 toast.success("Sign-in successful!");
                 // Persist logged-in user for later API calls (e.g., joining groups)
                 try {
-                    localStorage.setItem('user', JSON.stringify(data));
+                    // update global auth context (also persists using auth helper)
+                    if (setUser) setUser(data);
                 } catch (_) {}
                 navigate("/dashboard"); // Redirect to dashboard on success
             } else {

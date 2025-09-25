@@ -1,12 +1,14 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
 import { fetchMessages, createMessage, fetchEncouragements, createEncouragement } from "../apiEvents";
 import { useParams } from "react-router-dom";
 import { FaThumbsUp, FaHeart, FaEllipsisH } from 'react-icons/fa';
+import { AuthContext } from '../context/AuthProvider';
 
 export default function GroupDiscussion() {
   const { id: groupId } = useParams();
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
+  const { user } = useContext(AuthContext);
   const [encs, setEncs] = useState({});
   const listRef = useRef(null);
 
@@ -22,7 +24,8 @@ export default function GroupDiscussion() {
   const handleSend = async e => {
     e.preventDefault();
     if (!newMsg.trim()) return;
-    await createMessage(groupId, { user_id: 1, content: newMsg.trim() });
+    const userId = user?.id || 1; // fallback to 1 for dev when not available
+    await createMessage(groupId, { user_id: userId, content: newMsg.trim() });
     setNewMsg("");
     fetchMessages(groupId).then(setMessages);
   };
@@ -48,11 +51,11 @@ export default function GroupDiscussion() {
 
       <div className="chat-list" ref={listRef}>
         {messages.map(msg => (
-          <div key={msg.id} className={`chat-item ${msg.user_id === 1 ? 'me' : ''}`}>
-            <div className="avatar">{`U${msg.user_id}`}</div>
+          <div key={msg.id} className={`chat-item ${msg.user_id === (user?.id || 1) ? 'me' : ''}`}>
+            <div className="avatar">{msg.user_id === (user?.id || 1) ? 'You' : `U${msg.user_id}`}</div>
             <div className="chat-body">
               <div className="chat-meta">
-                <span className="username">User {msg.user_id}</span>
+                <span className="username">{msg.user_id === (user?.id || 1) ? 'You' : `User ${msg.user_id}`}</span>
                 <span className="ts">{new Date(msg.created_at || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
               </div>
               <div className="chat-text">{msg.content}</div>

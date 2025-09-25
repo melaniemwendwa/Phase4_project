@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchGroups } from '../api';
+import { AuthContext } from '../context/AuthProvider';
 
 export default function Groups() {
   const [groups, setGroups] = useState([]);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     fetchGroups().then(setGroups);
@@ -16,8 +18,12 @@ export default function Groups() {
           <h1 className="hero-title">Support Groups</h1>
           <p className="hero-sub">A safe, moderated place to connect with people who understand. Browse groups by topic and join conversations that matter.</p>
           <div className="hero-actions">
-            <Link to="/groups" className="btn btn-primary">Browse groups</Link>
-            <Link to="/signup" className="btn btn-ghost">Create an account</Link>
+            {!user && (
+              <>
+                <Link to="/groups" className="btn btn-primary">Browse groups</Link>
+                <Link to="/signup" className="btn btn-ghost">Create an account</Link>
+              </>
+            )}
           </div>
         </div>
 
