@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { fetchEvents, createEvent, updateEvent, deleteEvent } from "../apiEvents";
 import { useParams } from "react-router-dom";
 import Modal from "./Modal";
-import { FaPlus, FaCalendarAlt } from 'react-icons/fa';
+import { FaPlus, FaCalendarAlt, FaPen, FaTrash } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthProvider';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -42,6 +42,7 @@ export default function GroupCalendar() {
 
   const handleDelete = async eventId => {
     try {
+      if (!window.confirm('Delete this event? This cannot be undone.')) return;
       await deleteEvent(groupId, eventId);
       reload();
     } catch (err) {
@@ -148,7 +149,9 @@ export default function GroupCalendar() {
           <li style={{fontFamily:'Poppins', color:'var(--text)', opacity:0.7, textAlign:'center', padding:'2em 0'}}>No events scheduled yet.</li>
         ) : (
           events.map(ev => {
-            const canEdit = user && (ev.user_id === user.id || ev.creator_id === user.id || ev.user?.id === user.id);
+            // allow any signed-in user to edit/delete (useful for testing);
+            // adjust this logic to restrict to creators/admins as needed
+            const canEdit = Boolean(user);
             return (
               <li key={ev.id} className="calendar-item compact">
                 <div className="event-main">
@@ -156,9 +159,26 @@ export default function GroupCalendar() {
                   <div className="time-left" aria-label={`Time left until event ends`}>{timeLeftLabel(ev.end_time, ev.start_time)}</div>
                 </div>
                 {canEdit && (
-                  <div className="event-actions">
-                    <button className="btn-ghost" onClick={() => handleEdit(ev)}>Edit</button>
-                    <button className="btn btn-danger" onClick={() => handleDelete(ev.id)}>Delete</button>
+                  <div className="event-actions" style={{display:'flex', gap:8, alignItems:'center'}}>
+                    <button
+                      className="icon-btn"
+                      onClick={() => handleEdit(ev)}
+                      aria-label={`Edit event ${ev.title}`}
+                      title="Edit event"
+                      style={{border:'none', background:'transparent', cursor:'pointer', color:'var(--primary)', padding:8, borderRadius:8, display:'inline-flex', alignItems:'center', justifyContent:'center'}}
+                    >
+                      <FaPen />
+                    </button>
+
+                    <button
+                      className="icon-btn"
+                      onClick={() => handleDelete(ev.id)}
+                      aria-label={`Delete event ${ev.title}`}
+                      title="Delete event"
+                      style={{border:'none', background:'transparent', cursor:'pointer', color:'#ef4444', padding:8, borderRadius:8, display:'inline-flex', alignItems:'center', justifyContent:'center'}}
+                    >
+                      <FaTrash />
+                    </button>
                   </div>
                 )}
               </li>
