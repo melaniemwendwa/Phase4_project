@@ -7,6 +7,8 @@ import { fetchGroupDetails, fetchPosts, createPost, checkMembership, joinGroup, 
 import GroupCalendar from "../components/GroupCalendar";
 import GroupDiscussion from "../components/GroupDiscussion";
 import { AuthContext } from "../context/AuthProvider";
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 
 const GroupDetails = () => {
   const { id: groupId } = useParams();
@@ -17,7 +19,6 @@ const GroupDetails = () => {
   const [joined, setJoined] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showGuidelines, setShowGuidelines] = useState(false);
-  const [newPost, setNewPost] = useState({ header: "", body: "", links: "" });
 
   useEffect(() => {
     let mounted = true;
@@ -53,24 +54,7 @@ const GroupDetails = () => {
     }
   };
 
-  const handleAddPost = async (e) => {
-    e.preventDefault();
-    const postData = {
-      header: newPost.header,
-      body: newPost.body,
-      links: newPost.links.split(",").map(l => l.trim()).filter(Boolean),
-      user_id: user ? user.id : 0
-    };
-    try {
-      await createPost(groupId, postData);
-      const refreshed = await fetchPosts(groupId);
-      setPosts(refreshed);
-      setShowModal(false);
-      setNewPost({ header: "", body: "", links: "" });
-    } catch (err) {
-      console.error('create post failed', err);
-    }
-  };
+  // Post creation handled by Formik in the modal
 
   if (!group) return <div>Loading...</div>;
 
@@ -176,27 +160,62 @@ const GroupDetails = () => {
             <Modal isOpen={showModal} onClose={()=>setShowModal(false)}>
               <div style={{fontFamily: 'Poppins', padding: '1em 0'}}>
                 <h2 style={{marginBottom:'1em', fontWeight:700, fontFamily: 'Poppins', fontSize:'1.25em', color: 'var(--primary)'}}>Create a Post</h2>
-                <form onSubmit={handleAddPost} className="ms-form">
-                  <div className="ms-row">
-                    <label className="ms-label" htmlFor="post-header">Header</label>
-                    <input id="post-header" className="form-control ms-input" type="text" placeholder="What's on your mind?" value={newPost.header} onChange={e=>setNewPost({...newPost, header:e.target.value})} required />
-                  </div>
+                {/* Use Formik + Yup for validation */}
+                <Formik
+                  initialValues={{ header: '', body: '', links: '' }}
+                  validationSchema={Yup.object().shape({
+                    header: Yup.string().required('Header required').max(255, 'Header too long'),
+                    body: Yup.string().required('Body required').min(5, 'Write a bit more'),
+                    links: Yup.string().test('is-urls', 'Links must be comma separated valid URLs', value => {
+                      if (!value) return true;
+                      try {
+                        return value.split(',').map(s=>s.trim()).filter(Boolean).every(u => /^(https?:)?\/\//.test(u) || /^https?:\/\//.test(u));
+                      } catch(e) { return false }
+                    })
+                  })}
+                  onSubmit={async (values, { setSubmitting }) => {
+                    const postData = {
+                      header: values.header,
+                      body: values.body,
+                      links: values.links ? values.links.split(',').map(l=>l.trim()).filter(Boolean) : [],
+                      user_id: user ? user.id : 0
+                    };
+                    try {
+                      await createPost(groupId, postData);
+                      const refreshed = await fetchPosts(groupId);
+                      setPosts(refreshed);
+                      setShowModal(false);
+                    } catch (err) {
+                      console.error('create post failed', err);
+                    } finally { setSubmitting(false) }
+                  }}
+                >{({ values, handleChange, handleBlur, isSubmitting, errors, touched }) => (
+                  <Form className="ms-form">
+                    <div className="ms-row">
+                      <label className="ms-label" htmlFor="post-header">Header</label>
+                      <Field id="post-header" name="header" className="form-control ms-input" placeholder="What's on your mind?" />
+                      <div style={{color:'#b91c1c', fontSize:'0.9rem'}}><ErrorMessage name="header" /></div>
+                    </div>
 
-                  <div className="ms-row">
-                    <label className="ms-label" htmlFor="post-body">Body</label>
-                    <textarea id="post-body" className="form-control ms-textarea" placeholder="Share your story, thoughts, or encouragement" value={newPost.body} onChange={e=>setNewPost({...newPost, body:e.target.value})} rows={5} required />
-                  </div>
+                    <div className="ms-row">
+                      <label className="ms-label" htmlFor="post-body">Body</label>
+                      <Field as="textarea" id="post-body" name="body" className="form-control ms-textarea" placeholder="Share your story, thoughts, or encouragement" rows={5} />
+                      <div style={{color:'#b91c1c', fontSize:'0.9rem'}}><ErrorMessage name="body" /></div>
+                    </div>
 
-                  <div className="ms-row">
-                    <label className="ms-label" htmlFor="post-links">Links (optional)</label>
-                    <input id="post-links" className="form-control ms-input" type="text" placeholder="Comma separated URLs" value={newPost.links} onChange={e=>setNewPost({...newPost, links:e.target.value})} />
-                  </div>
+                    <div className="ms-row">
+                      <label className="ms-label" htmlFor="post-links">Links (optional)</label>
+                      <Field id="post-links" name="links" className="form-control ms-input" placeholder="Comma separated URLs" />
+                      <div style={{color:'#b91c1c', fontSize:'0.9rem'}}><ErrorMessage name="links" /></div>
+                    </div>
 
-                  <div className="ms-actions">
-                    <button type="button" className="btn btn-ghost btn-small" onClick={()=>setShowModal(false)}>Cancel</button>
-                    <button className="btn btn-primary ms-primary" type="submit">Post</button>
-                  </div>
-                </form>
+                    <div className="ms-actions">
+                      <button type="button" className="btn btn-ghost btn-small" onClick={()=>setShowModal(false)}>Cancel</button>
+                      <button className="btn btn-primary ms-primary" type="submit" disabled={isSubmitting}> {isSubmitting ? 'Posting...' : 'Post'}</button>
+                    </div>
+                  </Form>
+                )}
+                </Formik>
               </div>
             </Modal>
 

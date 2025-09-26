@@ -7,7 +7,7 @@ from models import User
 from config import bcrypt
 
 # Enable CORS for React frontend
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://127.0.0.1:3000"]}})
 
 # --- Session/Event Routes ---
 from datetime import datetime
@@ -269,7 +269,15 @@ def leave_group(group_id):
     return jsonify({'message': 'left', 'group_id': group_id, 'user_id': user_id}), 200
 
 
+# --- User-specific routes ---
+@app.route('/users/<int:user_id>/groups', methods=['GET'])
+def get_user_groups(user_id):
+    """Return the list of SupportGroup objects the given user has joined."""
+    groups = SupportGroup.query.join(Membership).filter(Membership.user_id == user_id).all()
+    return jsonify([g.to_dict() for g in groups]), 200
+
+
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('FLASK_RUN_PORT', 5555))
-    app.run(port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=True)

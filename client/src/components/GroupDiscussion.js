@@ -3,18 +3,34 @@ import { fetchMessages, createMessage, fetchEncouragements, createEncouragement 
 import { useParams } from "react-router-dom";
 import { FaThumbsUp, FaHeart, FaEllipsisH } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthProvider';
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
 
 export default function GroupDiscussion() {
   const { id: groupId } = useParams();
   const [messages, setMessages] = useState([]);
-  const [newMsg, setNewMsg] = useState("");
-  const [anonymous, setAnonymous] = useState(false);
+  // Message input is handled by Formik in the form below
   const { user } = useContext(AuthContext);
   const [encs, setEncs] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const listRef = useRef(null);
 
   useEffect(() => {
-    fetchMessages(groupId).then(setMessages);
+    const load = async () => {
+      if (!groupId) return;
+      setLoading(true);
+      setError("");
+      try {
+        const data = await fetchMessages(groupId);
+        setMessages(data);
+      } catch (e) {
+        setError(e.message || "Failed to fetch messages");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, [groupId]);
 
   useEffect(() => {
@@ -22,23 +38,38 @@ export default function GroupDiscussion() {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [messages]);
 
-  const handleSend = async e => {
-    e.preventDefault();
-    if (!newMsg.trim()) return;
-    const userId = user?.id || 1; // fallback to 1 for dev when not available
-    await createMessage(groupId, { user_id: userId, content: newMsg.trim(), anonymous });
-    setNewMsg("");
-    fetchMessages(groupId).then(setMessages);
-  };
+  // Submission handled by Formik below
 
   const loadEncouragements = async msgId => {
-    const data = await fetchEncouragements(msgId);
-    setEncs(encs => ({ ...encs, [msgId]: data }));
+    try {
+      const data = await fetchEncouragements(msgId);
+      setEncs(encs => ({ ...encs, [msgId]: data }));
+    } catch (e) {
+      setError(e.message || "Failed to load encouragements");
+    }
   };
 
   const handleEncourage = async (msgId, type) => {
-    await createEncouragement(msgId, { user_id: 1, type });
-    loadEncouragements(msgId);
+    try {
+      await createEncouragement(msgId, { user_id: 1, type });
+      loadEncouragements(msgId);
+    } catch (e) {
+      setError(e.message || "Failed to submit encouragement");
+    }
+  };
+
+  const retry = async () => {
+    if (!groupId) return;
+    setError("");
+    setLoading(true);
+    try {
+      const data = await fetchMessages(groupId);
+      setMessages(data);
+    } catch (e) {
+      setError(e.message || "Failed to fetch messages");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,6 +81,17 @@ export default function GroupDiscussion() {
         </div>
       </div>
 
+      {error && (
+        <div className="alert alert-error" role="alert" style={{margin:"0.5rem 1rem"}}>
+          <span>{error}</span>
+          <button className="btn btn-sm" style={{marginLeft:"0.5rem"}} onClick={retry}>Retry</button>
+        </div>
+      )}
+
+      {loading && (
+        <div className="chat-loading" style={{padding:"1rem"}}>Loading messages…</div>
+      )}
+
       <div className="chat-list" ref={listRef}>
         {messages.map(msg => (
           <div key={msg.id} className={`chat-item ${msg.user_id === (user?.id || 1) ? 'me' : ''}`}>
@@ -57,7 +99,7 @@ export default function GroupDiscussion() {
             <div className="chat-body">
               <div className="chat-meta">
                 <span className="username">{msg.user_id === (user?.id || 1) ? 'You' : `User ${msg.user_id}`}</span>
-                <span className="ts">{new Date(msg.created_at || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                <span className="ts">{new Date(msg.timestamp || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
               </div>
               <div className="chat-text">{msg.content}</div>
               <div className="chat-actions">
@@ -73,14 +115,30 @@ export default function GroupDiscussion() {
         ))}
       </div>
 
-      <form className="chat-input ms-form" onSubmit={handleSend}>
-        <input aria-label="Type a message" className="ms-input" value={newMsg} onChange={e => setNewMsg(e.target.value)} placeholder="Type a message..." />
-        <label className="ms-ctrl">
-          <input type="checkbox" checked={anonymous} onChange={e => setAnonymous(e.target.checked)} />
-          <span className="ms-ctrl-label">Post anonymously</span>
-        </label>
-        <button type="submit" className="btn btn-primary ms-primary">Send</button>
-      </form>
+      <Formik
+        initialValues={{ content: '', anonymous: false }}
+        validationSchema={Yup.object().shape({ content: Yup.string().required('Message cannot be empty').min(1) })}
+        onSubmit={async (values, { setSubmitting, resetForm }) => {
+          const userId = user?.id || 1;
+          try {
+            await createMessage(groupId, { user_id: userId, content: values.content.trim(), anonymous: !!values.anonymous });
+            resetForm();
+            const data = await fetchMessages(groupId);
+            setMessages(data);
+          } catch (e) {
+            setError(e.message || 'Failed to send message');
+          } finally { setSubmitting(false) }
+        }}
+      >{({ isSubmitting }) => (
+        <Form className="chat-input ms-form">
+          <Field name="content" aria-label="Type a message" className="ms-input" placeholder="Type a message..." />
+          <label className="ms-ctrl">
+            <Field type="checkbox" name="anonymous" />
+            <span className="ms-ctrl-label">Post anonymously</span>
+          </label>
+          <button type="submit" className="btn btn-primary ms-primary" disabled={isSubmitting}>Send</button>
+        </Form>
+      )}</Formik>
     </div>
   );
 }

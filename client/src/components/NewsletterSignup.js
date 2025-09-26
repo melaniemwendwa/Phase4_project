@@ -1,14 +1,9 @@
 import { useState } from 'react';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 
 export default function NewsletterSignup() {
-  const [email, setEmail] = useState('');
   const [done, setDone] = useState(false);
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    // For now just show a thank you — integration with backend can be added later
-    setDone(true);
-  }
 
   return (
     <section className="newsletter" style={{marginTop:24}}>
@@ -19,10 +14,21 @@ export default function NewsletterSignup() {
         </div>
         <div>
           {!done ? (
-            <form onSubmit={handleSubmit} style={{display:'flex', gap:8}}>
-              <input className="form-control" placeholder="Your email" value={email} onChange={e=>setEmail(e.target.value)} />
-              <button className="btn btn-primary" type="submit">Subscribe</button>
-            </form>
+            <Formik
+              initialValues={{ email: '' }}
+              validationSchema={Yup.object().shape({ email: Yup.string().email('Invalid email').required('Email required') })}
+              onSubmit={(values, { setSubmitting }) => {
+                // Placeholder: integrate with backend subscription
+                setDone(true);
+                setSubmitting(false);
+              }}
+            >{({ isSubmitting }) => (
+              <Form style={{display:'flex', gap:8}}>
+                <Field name="email" className="form-control" placeholder="Your email" />
+                <button className="btn btn-primary" type="submit" disabled={isSubmitting}>Subscribe</button>
+                <div style={{color:'#b91c1c', fontSize:'0.85rem'}}><ErrorMessage name="email" /></div>
+              </Form>
+            )}</Formik>
           ) : (
             <div style={{background:'var(--card-bg)', padding:12, borderRadius:8}}>Thanks — we'll keep you updated.</div>
           )}

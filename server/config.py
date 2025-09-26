@@ -29,5 +29,5 @@ db.init_app(app)
 # Instantiate REST API
 api = Api(app)
 
-# Instantiate CORS
-CORS(app)
+# NOTE: CORS is configured in `app.py` with project-specific origins.
+# Avoid initializing CORS twice to prevent inconsistent behavior.

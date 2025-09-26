@@ -4,6 +4,8 @@ import { useParams } from "react-router-dom";
 import Modal from "./Modal";
 import { FaPlus, FaCalendarAlt } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthProvider';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 
 export default function GroupCalendar() {
   const { id: groupId } = useParams();
@@ -11,7 +13,7 @@ export default function GroupCalendar() {
   const [form, setForm] = useState({ title: "", description: "", start_time: "", end_time: "" });
   const [editing, setEditing] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [tick, setTick] = useState(0); // used to refresh time-left labels every minute
+  const [, setTick] = useState(0); // used to refresh time-left labels every minute
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
@@ -25,22 +27,7 @@ export default function GroupCalendar() {
 
   const reload = () => fetchEvents(groupId).then(setEvents).catch(() => setEvents([]));
 
-  const handleSubmit = async e => {
-    e.preventDefault();
-    try {
-      if (editing) {
-        await updateEvent(groupId, editing.id, form);
-      } else {
-        await createEvent(groupId, form);
-      }
-      reload();
-      setForm({ title: "", description: "", start_time: "", end_time: "" });
-      setEditing(null);
-      setShowModal(false);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // Event form submission is handled by Formik inside the modal now.
 
   const handleEdit = event => {
     setEditing(event);
@@ -100,33 +87,59 @@ export default function GroupCalendar() {
       <Modal isOpen={showModal} onClose={()=>setShowModal(false)}>
         <div style={{fontFamily:'Poppins', padding:'1em 0'}}>
           <h2 style={{marginBottom:'1em', fontWeight:700, fontFamily:'Poppins', fontSize:'1.2em', color:'var(--primary)'}}>{editing ? "Edit Event" : "Create Event"}</h2>
-          <form onSubmit={handleSubmit} className="ms-form" aria-label="Event form">
-            <div className="ms-row">
-              <label className="ms-label" htmlFor="event-title">Title</label>
-              <input id="event-title" className="form-control ms-input" type="text" placeholder="Event title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
-            </div>
-
-            <div className="ms-row">
-              <label className="ms-label" htmlFor="event-desc">Description</label>
-              <textarea id="event-desc" className="form-control ms-textarea" placeholder="Short description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-            </div>
-
-            <div className="ms-row ms-grid-2">
-              <div>
-                <label className="ms-label" htmlFor="event-start">Starts</label>
-                <input id="event-start" className="form-control ms-input" type="datetime-local" value={form.start_time} onChange={e => setForm({ ...form, start_time: e.target.value })} required />
+          <Formik
+            enableReinitialize
+            initialValues={{ title: form.title, description: form.description, start_time: form.start_time, end_time: form.end_time }}
+            validationSchema={Yup.object().shape({
+              title: Yup.string().required('Title required').min(3),
+              start_time: Yup.string().required('Start time required').test('is-date','Invalid date', val => !!Date.parse(val))
+            })}
+            onSubmit={async (values, { setSubmitting }) => {
+              try {
+                if (editing) {
+                  await updateEvent(groupId, editing.id, values);
+                } else {
+                  await createEvent(groupId, values);
+                }
+                reload();
+                setForm({ title: '', description: '', start_time: '', end_time: '' });
+                setEditing(null);
+                setShowModal(false);
+              } catch (err) {
+                console.error(err);
+              } finally { setSubmitting(false) }
+            }}
+          >{({ isSubmitting }) => (
+            <Form className="ms-form" aria-label="Event form">
+              <div className="ms-row">
+                <label className="ms-label" htmlFor="event-title">Title</label>
+                <Field id="event-title" name="title" className="form-control ms-input" />
+                <div style={{color:'#b91c1c', fontSize:'0.9rem'}}><ErrorMessage name="title" /></div>
               </div>
-              <div>
-                <label className="ms-label" htmlFor="event-end">Ends</label>
-                <input id="event-end" className="form-control ms-input" type="datetime-local" value={form.end_time} onChange={e => setForm({ ...form, end_time: e.target.value })} />
-              </div>
-            </div>
 
-            <div className="ms-actions">
-              <button type="button" className="btn btn-ghost btn-small" onClick={() => { setShowModal(false); setEditing(null); }}>Cancel</button>
-              <button className="btn btn-primary ms-primary" type="submit">{editing ? "Update" : "Create"} Event</button>
-            </div>
-          </form>
+              <div className="ms-row">
+                <label className="ms-label" htmlFor="event-desc">Description</label>
+                <Field as="textarea" id="event-desc" name="description" className="form-control ms-textarea" />
+              </div>
+
+              <div className="ms-row ms-grid-2">
+                <div>
+                  <label className="ms-label" htmlFor="event-start">Starts</label>
+                  <Field id="event-start" name="start_time" type="datetime-local" className="form-control ms-input" />
+                  <div style={{color:'#b91c1c', fontSize:'0.9rem'}}><ErrorMessage name="start_time" /></div>
+                </div>
+                <div>
+                  <label className="ms-label" htmlFor="event-end">Ends</label>
+                  <Field id="event-end" name="end_time" type="datetime-local" className="form-control ms-input" />
+                </div>
+              </div>
+
+              <div className="ms-actions">
+                <button type="button" className="btn btn-ghost btn-small" onClick={() => { setShowModal(false); setEditing(null); }}>Cancel</button>
+                <button className="btn btn-primary ms-primary" type="submit" disabled={isSubmitting}>{editing ? "Update" : "Create"} Event</button>
+              </div>
+            </Form>
+          )}</Formik>
         </div>
       </Modal>
 

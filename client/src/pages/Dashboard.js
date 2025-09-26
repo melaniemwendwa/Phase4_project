@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthProvider';
 import { fetchGroups, fetchPosts } from '../api';
 import { fetchEvents } from '../apiEvents';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FaChevronRight } from 'react-icons/fa';
 import { BASE_URL } from '../apiBase';
 
@@ -14,6 +14,7 @@ export default function Dashboard() {
     const [upcoming, setUpcoming] = useState([]);
     const [recent, setRecent] = useState([]);
     const [joinedSet, setJoinedSet] = useState(new Set());
+    const [userGroups, setUserGroups] = useState([]);
 
     useEffect(() => {
         let mounted = true;
@@ -40,6 +41,17 @@ export default function Dashboard() {
                     // We don't have membership list; keep groups the user has joined locally when they RSVP
                     // Initialize joinedSet empty; it will be updated when user clicks RSVP or later when we expose membership API
                     setJoinedSet(new Set());
+                }
+
+                // If user is signed in, fetch their joined groups
+                if (user && user.id) {
+                    try {
+                        const res = await fetch(`${BASE_URL}/users/${user.id}/groups`);
+                        if (res.ok) {
+                            const ug = await res.json();
+                            setUserGroups(ug);
+                        }
+                    } catch (err) { console.error('Failed to load user groups', err); }
                 }
             } catch (err) {
                 console.error('Dashboard load error', err);
@@ -137,24 +149,30 @@ export default function Dashboard() {
                         <div style={{background:'var(--card-bg)', padding:14, borderRadius:12, boxShadow:'0 6px 18px rgba(45,55,72,0.04)'}}>
                             <h3 style={{margin:0, fontSize:14, fontWeight:700, color:'var(--text)'}}>Your Groups</h3>
                             <div style={{marginTop:10, display:'flex', flexDirection:'column', gap:8}}>
-                                {groups.map(g => (
-                                    <div key={g.id} style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-                                        <div>
-                                            <div style={{fontWeight:700, color:'var(--text)'}}>{g.topic}</div>
-                                            <div style={{fontSize:12, color:'var(--titles)'}}>{g.member_count || g.members || 0} members</div>
+                                {user ? (
+                                    userGroups.length ? userGroups.map(g => (
+                                        <div key={g.id} style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+                                            <div>
+                                                <div style={{fontWeight:700, color:'var(--text)'}}>{g.topic}</div>
+                                                <div style={{fontSize:12, color:'var(--titles)'}}>{g.member_count || g.members || 0} members</div>
+                                            </div>
+                                            <div>
+                                                <button
+                                                    title={`Open ${g.topic}`}
+                                                    className="btn btn-ghost"
+                                                    onClick={() => navigate(`/groups/${g.id}`)}
+                                                    style={{borderRadius:999, display:'inline-flex', alignItems:'center', justifyContent:'center', padding:'0.5rem 0.6rem'}}
+                                                >
+                                                    <FaChevronRight />
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <button
-                                                title={`Open ${g.topic}`}
-                                                className="btn btn-ghost"
-                                                onClick={() => navigate(`/groups/${g.id}`)}
-                                                style={{borderRadius:999, display:'inline-flex', alignItems:'center', justifyContent:'center', padding:'0.5rem 0.6rem'}}
-                                            >
-                                                <FaChevronRight />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                                    )) : (
+                                        <div style={{color:'var(--titles)', fontSize:13}}>You haven't joined any groups yet.</div>
+                                    )
+                                ) : (
+                                    <div style={{color:'var(--titles)', fontSize:13}}>Sign in to see your groups</div>
+                                )}
                             </div>
                         </div>
                     </aside>
