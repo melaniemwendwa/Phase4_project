@@ -1,39 +1,33 @@
-## OpenCircle — Peer Support for Mental Health
+## OPENCIRCLE — Peer Support for Mental Health
 
 OpenCircle is a small web app for moderated peer support groups, events, and discussions. It features a calm, accessible design and provides a full-stack example flow:
 
 React UI → REST API → Database models & migrations → Seeded demo data.
 
-## Project outlook
+## PROJECT OUTLOOK
 <img src="/client/img/image.png" alt="App Screenshot" width="600">
 
 
-## Features
+## FEATURES
 
-Browse and filter community groups
+- Browse and filter community groups
+- Group pages with discussion threads and calendar events
+- Create events (for authenticated users)
+- Simple sign-up / sign-in flow (email + password)
+- Pre-seeded demo data for exploration
 
-Group pages with discussion threads and calendar events
 
-Create events (for authenticated users)
+## TECHNOLOGY USED
 
-Simple sign-up / sign-in flow (email + password)
+- Frontend: React, plain CSS (+ Tailwind config), Vite/CRA
+- Backend: Flask, SQLAlchemy, Flask-Migrate (Alembic)
+- Database (dev): SQLite (server/instance/app.db)
+- Auth: Session-based (simple, demo-friendly)
+- Tooling: npm/yarn for client, Pipenv for Python dependencies
 
-Pre-seeded demo data for exploration
+## PROJECT STRUCTURE
+```bash
 
-##Tech Stack
-
-Frontend: React, plain CSS (+ Tailwind config), Vite/CRA
-
-Backend: Flask, SQLAlchemy, Flask-Migrate (Alembic)
-
-Database (dev): SQLite (server/instance/app.db)
-
-Auth: Session-based (simple, demo-friendly)
-
-Tooling: npm/yarn for client, Pipenv for Python dependencies
-
-## project structure
-.
 ├── CONTRIBUTING.md        # Contribution guidelines
 ├── LICENSE.md             # Project license
 ├── README.md              # Project overview & setup
@@ -69,50 +63,64 @@ Tooling: npm/yarn for client, Pipenv for Python dependencies
     │   └── app.db
     └── migrations/        # Alembic migrations (DB schema history)
 
-## Local Setup
-1. Clone the repo
+```
+
+## LOCAL SETUP
+
+
+## 1. Clone the repo
+```bash
 git clone <repo-url>
 cd Phase4_project
+```
 
-2. Backend (Flask server)
+
+## 2. Backend (Flask server)
+```bash
 cd server
 pip install pipenv
 pipenv install --dev
 pipenv shell  # optional
+```
 
-Set environment variables (via .env or export):
+## 3. Set environment variables (via .env or export):
+```bash
 FLASK_APP=app.py
 FLASK_ENV=development
 SECRET_KEY=some-dev-secret
 DATABASE_URL=sqlite:///instance/app.db
+```
 
-Run migrations & seed demo data:
+## 4.Run migrations & seed demo data:
+```bash
 pipenv run flask db upgrade
 pipenv run python seed.py
+```
 
-Start the server:
-pipenv run python app.py
+## 5. Start the server:
+```bash
+python app.py
+```
 
-3. Frontend (React client)
+## 6. Frontend (React client)
+```bash
 cd ../client
 npm install
 npm start
+```
 
-4. Explore!
+## 7. Explore!
 
-Open browser at http://localhost:3000/
+- Open browser at http://localhost:3000/
+- Sign up and explore groups & events;
 
-Sign up and explore groups & events;
+## UTILITY SCRIPTS
+## Run from server:
 
-## Utility Scripts
+- seed.py — create default groups, users, posts
+- add_events.py — insert demo events
+- add_anonymous_posts.py — insert demo anonymous posts
+- pipenv run python seed.py
 
-Run from server/:
-
-seed.py — create default groups, users, posts
-
-add_events.py — insert demo events
-
-add_anonymous_posts.py — insert demo anonymous posts
-pipenv run python seed.py
-
-
+## LICENSE
+- This project is under no license
