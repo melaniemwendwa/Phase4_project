@@ -1,12 +1,8 @@
 """Server package marker.
 
-This file makes the `server` directory a Python package so imports like
-`from server.app import app` work when the project root is on PYTHONPATH.
+Keep this file minimal so importing the package doesn't execute application
+initialization twice. Import the app explicitly with `from server.app import app`
+or use the `wsgi.py` entrypoint which imports `server.app`.
 """
 
-# re-export the Flask app if someone imports the package directly
-try:
-    from .app import app  # noqa: F401
-except Exception:
-    # If import fails during tooling or static analysis, ignore.
-    app = None
+__all__ = []
