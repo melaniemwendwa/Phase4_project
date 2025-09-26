@@ -41,5 +41,6 @@ traitlets==5.14.3
 typing-extensions==4.13.2
 wcwidth==0.2.13
 werkzeug==2.2.2
+
 zipp==3.20.2
-gunicorn
+gunicorn==23.0.0
