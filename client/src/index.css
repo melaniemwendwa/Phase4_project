@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-/* Removed Tailwind directives because Tailwind is not set up */
+/* Tailwind imports — enabled because Tailwind is installed in this workspace */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 ::-webkit-scrollbar {
     width: 3px;
@@ -83,7 +86,7 @@ main,
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7B9B8C 60%, #A8C5B6 100%);
+  background: linear-gradient(135deg, #7C3AED 60%, #9F7AE8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,7 +161,7 @@ main,
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(10, 10, 10, 0.35);
+  background: rgba(255, 255, 255, 0);
   z-index: 1200;
   padding: 1.5rem
 }
@@ -166,18 +169,20 @@ main,
 .member-posts .modal-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.0);
+  background: rgb(255, 255, 255);
   z-index: 80
 }
 
 .modal-content {
-  background: var(--card-bg);
+  /* Brand purple for primary actions and highlights */
+  --primary: #7C3AED; /* indigo/purple */
   border-radius: 14px;
   padding: 1.25rem;
   box-shadow: var(--card-shadow);
   max-width: 720px;
   width: 100%;
   position: relative;
+  background: rgb(255, 255, 255);
 }
 
 .modal-close {
@@ -194,10 +199,10 @@ main,
 .discussion-board.chat-ui {
   display: flex;
   flex-direction: column;
-  min-height: 320px;
   max-height: 60vh;
   border-radius: 12px;
   overflow: hidden;
+  min-width: 100%;
 }
 
 .site-header {
@@ -209,9 +214,9 @@ main,
   height: var(--header-height);
   background: rgba(255, 255, 255, 0);
   backdrop-filter: blur(6px);
-  z-index: 1000;
+  border-color: rgba(124,58,237,0.9);
+  box-shadow: 0 6px 18px rgba(124,58,237,0.08);
 }
-
 
 .chat-list {
   flex: 1 1 auto;
@@ -219,27 +224,27 @@ main,
   padding: 0.6rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem
+  gap: 0.5rem;
 }
 
 .chat-item {
   display: flex;
   gap: 0.6rem;
-  align-items: flex-start
+  align-items: flex-start;
 }
 
 .chat-item .avatar {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7B9B8C 60%, #A8C5B6 100%);
+  background: linear-gradient(135deg, #7C3AED 60%, #9F7AE8 100%);
   color: var(--background);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 0.9rem;
-  flex-shrink: 0
+  flex-shrink: 0;
 }
 
 .chat-body {
@@ -296,7 +301,7 @@ main,
 }
 
 .chat-item.me .chat-text {
-  background: rgba(123, 155, 140, 0.12)
+  background: rgba(124,58,237,0.12)
 }
 
 .chat-input {
@@ -318,7 +323,6 @@ main,
 .chat-input button {
   border-radius: 999px;
   padding: 0.45rem 0.9rem;
-  background: var(--primary);
   color: var(--background);
   border: none;
   cursor: pointer
@@ -467,7 +471,7 @@ main,
   width: 48px;
   height: 48px;
   border-radius: 48px;
-  background: linear-gradient(135deg, #7B9B8C 60%, #A8C5B6 100%);
+  background: linear-gradient(135deg, #7C3AED 60%, #9F7AE8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -576,7 +580,7 @@ main,
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7B9B8C 60%, #A8C5B6 100%);
+  background: linear-gradient(135deg, #7C3AED 60%, #9F7AE8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -595,7 +599,7 @@ main,
 .group-actions .meta { display:flex; gap: 1rem; color: #374151 }
 .group-actions .meta-item { font-size: 0.98rem }
 .group-actions .actions { display:flex; gap: 0.6rem; align-items:center }
-.button-create { border-radius: 999px; padding: 0.45rem 0.9rem; background: var(--primary); color: var(--background); border: none; box-shadow: 0 6px 14px rgba(123,155,140,0.06); font-weight:700 }
+.button-create { border-radius: 999px; padding: 0.45rem 0.9rem; background: var(--primary); color: var(--background); border: none; box-shadow: 0 6px 14px rgba(124,58,237,0.06); font-weight:700 }
 .button-create .plus { margin-right: 0.4rem; font-weight:700 }
 
 .posts-header { display:flex; align-items:center; gap:0.6rem; margin-top:1.2rem }
@@ -654,8 +658,8 @@ posts-column { min-width:0 }
 .ms-input::placeholder { color: #9CA3AF }
 
 .ms-input:focus {
-  border-color: rgba(123,155,140,0.9);
-  box-shadow: 0 6px 18px rgba(123,155,140,0.08);
+  border-color: rgba(124,58,237,0.9);
+  box-shadow: 0 6px 18px rgba(124,58,237,0.08);
 }
 
 .ms-textarea {
@@ -680,11 +684,11 @@ posts-column { min-width:0 }
   color: var(--background);
   border: none;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(123,155,140,0.08);
+  box-shadow: 0 8px 20px rgba(124,58,237,0.08);
   transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
 }
 
-.ms-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(123,155,140,0.10) }
+.ms-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(124,58,237,0.10) }
 
 .btn.btn-ghost, .btn-ghost { background: transparent; border: 1px solid rgba(0,0,0,0.06); color: var(--text); padding: 0.55rem 0.95rem; border-radius: 8px }
 
@@ -748,17 +752,17 @@ posts-column { min-width:0 }
 }
 .calendar-item.compact .event-main { display:flex; flex-direction:row; gap:0.75rem; align-items:center }
 .calendar-item.compact .event-title { font-size: 1rem; font-weight:700; margin-bottom:0 }
-.calendar-item.compact .time-left { color: #6B7280; font-size: 0.92rem; background: rgba(44,44,52,0.03); padding: 0.28rem 0.5rem; border-radius: 8px }
+.calendar-item.compact .time-left { color: #6B7280; font-size: 12px; background: rgba(44,44,52,0.03); padding: 0.28rem 0.5rem; border-radius: 8px }
 .calendar-item.compact .event-actions { flex-direction: row; gap: 0.5rem; align-items: center }
-.calendar-item.compact .event-actions .btn-ghost { padding: 0.28rem 0.5rem; border-radius: 8px; font-size: 0.86rem }
-.calendar-item.compact .event-actions .btn { padding: 0.28rem 0.55rem; font-size: 0.86rem }
+.calendar-item.compact .event-actions .btn-ghost { padding: 2px 3px; border-radius: 8px; font-size: 0.86rem }
+.calendar-item.compact .event-actions .btn { padding: 2px 3px; font-size: 12px }
 
 /* slightly reduce the before overlay to keep the card feeling light */
 .calendar-item.compact::before { border-radius: 12px }
 .chat-meta .username { font-weight: 700; color: var(--text); margin-right: 0.5rem }
 .chat-meta .ts { font-size: 0.78rem; color: #9CA3AF }
 .chat-text { background: #f3f4f6; padding: 0.7rem 0.9rem; border-radius: 12px; font-size: 0.98rem; color: var(--text); box-shadow: none; display: inline-block }
-.chat-item.me .chat-text { background: rgba(123,155,140,0.14) }
+.chat-item.me .chat-text { background: rgba(124,58,237,0.12) }
 .action-btn { padding: 0.25rem; border-radius: 8px; color: #6B7280 }
 
 /* Chat input: larger, pill-shaped, clear placeholder */
@@ -824,7 +828,7 @@ posts-column { min-width:0 }
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  background: linear-gradient(135deg, #7B9B8C 60%, #A8C5B6 100%);
+  background: linear-gradient(135deg, #7C3AED 60%, #9F7AE8 100%);
   color: var(--background);
   font-size: 1rem;
   overflow: hidden;
@@ -918,7 +922,7 @@ posts-column { min-width:0 }
 .hero-inner .btn-primary {
   background: rgba(167, 139, 250, 0.98);
   color: #ffffff;
-  box-shadow: 0 10px 30px rgba(123, 155, 140, 0.12)
+  box-shadow: 0 10px 30px rgba(124,58,237,0.12)
 }
 
 .hero-inner .btn-ghost {
@@ -1064,8 +1068,8 @@ posts-column { min-width:0 }
 
 .form-control:focus {
   outline: none;
-  box-shadow: 0 10px 30px rgba(123, 155, 140, 0.12);
-  border-color: rgba(123, 155, 140, 0.45);
+  box-shadow: 0 10px 30px rgba(124,58,237,0.12);
+  border-color: rgba(124,58,237,0.45);
   transform: translateY(-1px)
 }
 
@@ -1093,7 +1097,7 @@ posts-column { min-width:0 }
   color: var(--background);
   padding: 0.6rem 1.1rem;
   border-radius: 999px;
-  box-shadow: 0 8px 28px rgba(123, 155, 140, 0.12)
+  box-shadow: 0 8px 28px rgba(124,58,237,0.12)
 }
 
 .btn-ghost {
@@ -1117,13 +1121,13 @@ posts-column { min-width:0 }
 /* Color palette used across the UI */
 :root {
   /* New site palette (applied from user request)
-     primary: #7b9b8c (soft green)
-     page bg: #f4f1e8 (warm off-white)
-     accent: #e8a87c (warm peach)
-     text: #2d3748 (dark slate)
-     deep: #2c2c34 (very dark) */
+    primary: #7C3AED (brand purple)
+    page bg: #f4f1e8 (warm off-white)
+    accent: #e8a87c (warm peach)
+    text: #2d3748 (dark slate)
+    deep: #2c2c34 (very dark) */
 
-  --primary: #7b9b8c;
+  --primary: #7C3AED;
   --header-height: 64px;
   /* make the page background a warm off-white and use white for cards */
   --bg: #f4f1e8;
@@ -1167,8 +1171,8 @@ posts-column { min-width:0 }
   left: 0;
   width: 100%;
   height: var(--header-height);
-  background: var(--bg);
-  backdrop-filter: blur(6px);
+  background: #ffffff07;
+  backdrop-filter: blur(8px);
   z-index: 1000;
 }
 
@@ -1191,6 +1195,7 @@ posts-column { min-width:0 }
   height: 100%;
   padding: 0 1rem;
   box-sizing: border-box;
+  background-color: transparent;
 }
 
 .site-logo {
@@ -1412,11 +1417,11 @@ posts-column { min-width:0 }
 
 .auth-form .form-control:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(123,155,140,0.12);
-  border-color: rgba(123,155,140,0.45);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+  border-color: rgba(124,58,237,0.45);
 }
 
-.btn-primary {
+.auth-card .btn-primary {
   border-radius: 4px;
   padding: 0.85rem 1rem;
   box-shadow: none;
@@ -1481,8 +1486,8 @@ posts-column { min-width:0 }
 
 .form-control:focus {
   outline: none;
-  border-color: rgba(123, 155, 140, 0.45);
-  box-shadow: 0 6px 18px rgba(123, 155, 140, 0.06)
+  border-color: rgba(124,58,237,0.45);
+  box-shadow: 0 6px 18px rgba(124,58,237,0.06)
 }
 
 .sr-only {

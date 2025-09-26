@@ -1,55 +1,58 @@
-// API utility functions for events, messages, encouragements
+// API utility functions for events, messages, encouragements and groups
 import { BASE_URL } from './apiBase';
 
-// In-memory post storage for MVP
-const postsStore = {};
-
-// Using shared BASE_URL (http://localhost:5555)
-
+// --- Events ---
 export const fetchEvents = async groupId => {
   const res = await fetch(`${BASE_URL}/groups/${groupId}/events`);
+  if (!res.ok) throw new Error('Failed to fetch events');
   return res.json();
 };
 
 export const createEvent = async (groupId, data) => {
   const res = await fetch(`${BASE_URL}/groups/${groupId}/events`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
+  if (!res.ok) throw new Error('Failed to create event');
   return res.json();
 };
 
+// --- Messages ---
 export const fetchMessages = async groupId => {
   const res = await fetch(`${BASE_URL}/groups/${groupId}/messages`);
+  if (!res.ok) return [];
   return res.json();
 };
 
 export const createMessage = async (groupId, data) => {
   const res = await fetch(`${BASE_URL}/groups/${groupId}/messages`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
+  if (!res.ok) throw new Error('Failed to create message');
   return res.json();
 };
 
+// --- Encouragements ---
 export const fetchEncouragements = async messageId => {
   const res = await fetch(`${BASE_URL}/messages/${messageId}/encouragements`);
+  if (!res.ok) return [];
   return res.json();
 };
 
 export const createEncouragement = async (messageId, data) => {
   const res = await fetch(`${BASE_URL}/messages/${messageId}/encouragements`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
+  if (!res.ok) throw new Error('Failed to create encouragement');
   return res.json();
 };
 
-
-// --- Groups API ---
+// --- Groups ---
 export const fetchGroups = async () => {
   const res = await fetch(`${BASE_URL}/groups`);
   if (!res.ok) throw new Error('Failed to load groups');
@@ -62,21 +65,30 @@ export const fetchGroupDetails = async groupId => {
   return res.json();
 };
 
-export const joinGroup = async (groupId, { user_id, role = 'member' }) => {
+// Check membership: server expects ?user_id=...
+export const checkMembership = async (groupId, userId) => {
+  const res = await fetch(`${BASE_URL}/groups/${groupId}/membership?user_id=${userId}`);
+  if (!res.ok) return { is_member: false };
+  return res.json();
+};
+
+// Join a group (POST /groups/:id/join)
+export const joinGroup = async (groupId, userId) => {
   const res = await fetch(`${BASE_URL}/groups/${groupId}/join`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id, role })
+    body: JSON.stringify({ user_id: userId }),
   });
   if (!res.ok) throw new Error('Failed to join group');
   return res.json();
 };
 
-export const leaveGroup = async (groupId, { user_id }) => {
-  const res = await fetch(`${BASE_URL}/groups/${groupId}/leave`, {
-    method: 'POST',
+// Leave a group (DELETE /groups/:id/join) - uses DELETE as the RESTful action
+export const leaveGroup = async (groupId, userId) => {
+  const res = await fetch(`${BASE_URL}/groups/${groupId}/join`, {
+    method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id })
+    body: JSON.stringify({ user_id: userId }),
   });
   if (!res.ok) throw new Error('Failed to leave group');
   return res.json();
@@ -88,6 +100,7 @@ export const fetchUserGroups = async (userId) => {
   return res.json();
 };
 
+// --- Posts ---
 export const fetchPosts = async groupId => {
   const res = await fetch(`${BASE_URL}/groups/${groupId}/posts`);
   if (!res.ok) return [];
@@ -98,13 +111,14 @@ export const createPost = async (groupId, postData) => {
   const res = await fetch(`${BASE_URL}/groups/${groupId}/posts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(postData)
+    body: JSON.stringify(postData),
   });
+  if (!res.ok) throw new Error('Failed to create post');
   return res.json();
 };
 
 export const createComment = async (postId, content) => {
-  // Placeholder: returns new comment object
+  // Placeholder: returns new comment object (client-side)
   return {
     id: Date.now(),
     content,
@@ -113,9 +127,10 @@ export const createComment = async (postId, content) => {
 };
 
 export const createReply = async (commentId, content) => {
-  // Placeholder: returns new reply object
+  // Placeholder: returns new reply object (client-side)
   return {
     id: Date.now(),
     content,
   };
 };
+

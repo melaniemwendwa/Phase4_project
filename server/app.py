@@ -128,6 +128,21 @@ def signup():
     db.session.commit()
     return jsonify(user.to_dict()), 201
 
+
+@app.route('/signin', methods=['POST'])
+def signin():
+    data = request.get_json() or {}
+    email = data.get('email')
+    password = data.get('password')
+    if not email or not password:
+        return jsonify({'error': 'email and password required'}), 400
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'error': 'invalid credentials'}), 401
+    if not user.authenticate(password):
+        return jsonify({'error': 'invalid credentials'}), 401
+    return jsonify(user.to_dict()), 200
+
 # --- Feedback/Encouragement System ---
 @app.route('/messages/<int:message_id>/encouragements', methods=['GET'])
 def get_encouragements(message_id):
@@ -229,8 +244,18 @@ def join_group(group_id):
         'member_count': updated_count
     }), 201
 
-<<<<<<< HEAD
-@app.route('/groups/<int:group_id>/leave', methods=['POST'])
+
+@app.route('/groups/<int:group_id>/membership', methods=['GET'])
+def check_membership(group_id):
+    from flask import request
+    user_id = request.args.get('user_id', type=int)
+    if not user_id:
+        return jsonify({'is_member': False}), 200
+    existing = Membership.query.filter_by(group_id=group_id, user_id=user_id).first()
+    return jsonify({'is_member': bool(existing), 'membership_id': existing.id if existing else None}), 200
+
+
+@app.route('/groups/<int:group_id>/join', methods=['DELETE'])
 def leave_group(group_id):
     data = request.get_json() or {}
     user_id = data.get('user_id')
@@ -238,27 +263,11 @@ def leave_group(group_id):
         return jsonify({'error': 'user_id is required'}), 400
     membership = Membership.query.filter_by(group_id=group_id, user_id=user_id).first()
     if not membership:
-        current_count = Membership.query.filter_by(group_id=group_id).count()
-        return jsonify({'message': 'not a member', 'member_count': current_count}), 200
+        return jsonify({'message': 'not a member'}), 404
     db.session.delete(membership)
     db.session.commit()
-    updated_count = Membership.query.filter_by(group_id=group_id).count()
-    return jsonify({'message': 'left group', 'member_count': updated_count}), 200
+    return jsonify({'message': 'left', 'group_id': group_id, 'user_id': user_id}), 200
 
-
-@app.route('/users/<int:user_id>/groups', methods=['GET'])
-def get_user_groups(user_id):
-    """Return groups that the specified user has joined via memberships."""
-    user = User.query.get_or_404(user_id)
-    memberships = Membership.query.filter_by(user_id=user.id).all()
-    group_ids = [m.group_id for m in memberships]
-    if not group_ids:
-        return jsonify([]), 200
-    groups = SupportGroup.query.filter(SupportGroup.id.in_(group_ids)).all()
-    return jsonify([g.to_dict() for g in groups]), 200
-
-=======
->>>>>>> 9a90cd7 (Overall UI and Logic Haul)
 
 if __name__ == '__main__':
     import os

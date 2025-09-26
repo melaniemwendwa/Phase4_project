@@ -1,10 +1,9 @@
-// ...existing code...
+// GroupDetails page: combined/cleaned version with membership checking and join/leave
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import { FaRegThumbsUp, FaRegCommentDots, FaLeaf } from "react-icons/fa";
-// import API functions (to be implemented)
-import { fetchGroupDetails, fetchPosts, createPost, joinGroup, leaveGroup, fetchUserGroups } from "../api";
+import { fetchGroupDetails, fetchPosts, createPost, checkMembership, joinGroup, leaveGroup } from "../api";
 import GroupCalendar from "../components/GroupCalendar";
 import GroupDiscussion from "../components/GroupDiscussion";
 import { AuthContext } from "../context/AuthProvider";
@@ -21,56 +20,36 @@ const GroupDetails = () => {
   const [newPost, setNewPost] = useState({ header: "", body: "", links: "" });
 
   useEffect(() => {
-    fetchGroupDetails(groupId).then(setGroup);
-    fetchPosts(groupId).then(setPosts);
+    let mounted = true;
+    fetchGroupDetails(groupId).then(g => { if (mounted) setGroup(g); }).catch(()=>{});
+    fetchPosts(groupId).then(p => { if (mounted) setPosts(p); }).catch(()=>{});
+    return () => { mounted = false };
   }, [groupId]);
 
-  // Detect if current user has already joined this group
   useEffect(() => {
+    if (!user) { setJoined(false); return; }
     let active = true;
-    async function checkMembership() {
-      if (!user) { setJoined(false); return; }
-      try {
-        const myGroups = await fetchUserGroups(user.id);
-        if (!active) return;
-        const isMember = (myGroups || []).some(g => String(g.id) === String(groupId));
-        setJoined(isMember);
-      } catch (_) {
-        if (!active) return;
-        setJoined(false);
-      }
-    }
-    checkMembership();
+    checkMembership(groupId, user.id).then(res => {
+      if (!active) return;
+      setJoined(!!(res && (res.is_member || res.member_count || res.message === 'already a member')));
+    }).catch(()=>{});
     return () => { active = false };
-  }, [user, groupId]);
+  }, [groupId, user]);
 
   const handleJoin = async () => {
-    // Require authentication to join
-    if (!user) {
-      // Redirect to sign in if not authenticated
-      navigate("/signin");
-      return;
-    }
-    if (joined) return;
-    try {
-      const resp = await joinGroup(groupId, { user_id: user.id, role: "member" });
-      setJoined(true);
-      // Prefer server-returned member_count if available; otherwise increment
-      setGroup((g) => g ? { ...g, member_count: resp && typeof resp.member_count === 'number' ? resp.member_count : ((g.member_count || 0) + 1) } : g);
-      // Optionally navigate to dashboard; for toggle UX, we stay on page
-    } catch (e) {
-      // No-op here; could surface a toast/error UI if desired
-    }
-  };
-
-  const handleLeave = async () => {
     if (!user) { navigate('/signin'); return; }
     try {
-      const resp = await leaveGroup(groupId, { user_id: user.id });
-      setJoined(false);
-      setGroup((g) => g ? { ...g, member_count: resp && typeof resp.member_count === 'number' ? resp.member_count : Math.max(0, (g.member_count || 0) - 1) } : g);
-    } catch (e) {
-      // Optionally show error
+      if (joined) {
+        const resp = await leaveGroup(groupId, user.id);
+        setJoined(false);
+        setGroup(g => g ? { ...g, member_count: resp && typeof resp.member_count === 'number' ? resp.member_count : Math.max(0, (g.member_count || 1) - 1) } : g);
+      } else {
+        const resp = await joinGroup(groupId, user.id);
+        setJoined(true);
+        setGroup(g => g ? { ...g, member_count: resp && typeof resp.member_count === 'number' ? resp.member_count : ((g.member_count || 0) + 1) } : g);
+      }
+    } catch (err) {
+      console.error('join/leave error', err);
     }
   };
 
@@ -80,97 +59,45 @@ const GroupDetails = () => {
       header: newPost.header,
       body: newPost.body,
       links: newPost.links.split(",").map(l => l.trim()).filter(Boolean),
+      user_id: user ? user.id : 0
     };
-    await createPost(groupId, postData);
-    // reload from the posts store to avoid duplicate entries when createPost
-    // mutates the same in-memory array that `posts` references
-    const refreshed = await fetchPosts(groupId);
-    setPosts(refreshed);
-    setShowModal(false);
-    setNewPost({ header: "", body: "", links: "" });
+    try {
+      await createPost(groupId, postData);
+      const refreshed = await fetchPosts(groupId);
+      setPosts(refreshed);
+      setShowModal(false);
+      setNewPost({ header: "", body: "", links: "" });
+    } catch (err) {
+      console.error('create post failed', err);
+    }
   };
-
-  // comment and reply handlers removed (not used in current compact posts view)
 
   if (!group) return <div>Loading...</div>;
 
   return (
-<<<<<<< HEAD
-    <div className="community-page" style={{background: 'var(--background)', minHeight: '100vh', fontFamily: 'Poppins, Segoe UI, Arial, sans-serif', minWidth: '100vw'}}>
-      {/* Go back button */}
-      <div style={{margin: '2em 0 0 2em'}}>
-        <button className="button cancel" style={{fontFamily: 'Poppins', background: 'transparent', 
-          color: 'var(--text)', borderRadius: '999px', fontWeight: 600, fontSize: '1em', 
-          padding: '0.7em 2em', boxShadow: '0 2px 8px rgba(232, 168, 124, 0.12)'}}
-          onClick={() => navigate("/groups")}
-        >&larr; Go Back</button>
-      </div>
-
-      {/* Title block */}
-      <div className="group-header-row" style={{display: 'flex', alignItems: 'center', gap: '1.5em', margin: '1.2em 0 0 2em'}}>
-        <div className="group-avatar" style={{width: '64px', height: '64px', borderRadius: '50%', background: 'linear-gradient(135deg, #7B9B8C 60%, #A8C5B6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.9em', color: 'var(--background)', fontWeight: 700}}>{group.initials || 'EA'}</div>
-        <div className="group-title-block" style={{display: 'flex', flexDirection: 'column', gap: '0.2em'}}>
-          <div className="group-title" style={{fontSize: '2.2em', fontWeight: 800, color: 'var(--text)', fontFamily: 'Poppins'}}>{group.name}</div>
-          <div className="group-subtitle" style={{fontSize: '1.05em', color: 'var(--titles)', fontWeight: 500}}>{group.name}</div>
-=======
     <div className="community-page group-page">
       <div className="container">
-        {/* Go back button */}
         <div className="group-back">
           <button className="button back-button" onClick={() => navigate("/groups")}>&larr; Go Back</button>
->>>>>>> 9a90cd7 (Overall UI and Logic Haul)
         </div>
 
-<<<<<<< HEAD
-      {/* Description */}
-      <div className="group-description" style={{margin: '0.8em 0 0 2em', fontSize: '1.05em', color: 'var(--text)', fontFamily: 'Poppins', maxWidth: '900px'}}>{group.description}</div>
-
-      {/* Stats row: members, posts, join, create */}
-      <div className="group-stats-row" style={{display: 'flex', alignItems: 'center', gap: '1em', margin: '1.2em 0 0 2em', fontSize: '1em', fontFamily: 'Poppins'}}>
-        <span style={{display: 'flex', alignItems: 'center', gap: '0.4em'}}><i className="fas fa-users"></i> {group.member_count ?? 0} members</span>
-        <span style={{display: 'flex', alignItems: 'center', gap: '0.4em'}}><strong>{posts.length}</strong> posts</span>
-          <div style={{marginLeft: '0.6em', display: 'flex', gap: '0.6em', alignItems: 'center'}}>
-          {joined ? (
-            <button
-              className="btn btn-danger"
-              style={{background:'#ef4444', color:'#fff', borderRadius:'999px', padding:'0.5em 1em'}}
-              onClick={handleLeave}
-            >
-              Leave
-            </button>
-          ) : (
-            <button
-              className="btn btn-primary"
-              onClick={handleJoin}
-            >
-              Join
-            </button>
-          )}
-          <button className="button" style={{padding:'0.5em 1em', fontSize:'0.95em', borderRadius:'999px', fontFamily:'Poppins', display:'flex', alignItems:'center', gap:'0.4em', boxShadow:'0 2px 8px rgba(123,155,140,0.10)', background:'var(--primary)', color:'var(--background)', fontWeight:600}} onClick={()=>setShowGuidelines(true)}>
-            <span style={{fontSize:'1.05em'}}>+</span>
-            <span style={{fontSize:'0.98em'}}>Create</span>
-          </button>
-=======
-        {/* Title block */}
         <div className="group-header">
           <div className="group-avatar-large">{group.initials || 'EA'}</div>
           <div className="group-title-block">
             <div className="group-title">{group.name}</div>
             <div className="group-subtitle">{group.name}</div>
           </div>
->>>>>>> 9a90cd7 (Overall UI and Logic Haul)
         </div>
 
         <div className="group-description">{group.description}</div>
 
-        {/* Stats row: members, posts, join, create */}
         <div className="group-actions">
           <div className="meta">
-            <span className="meta-item">{group.members} members</span>
+            <span className="meta-item">{group.member_count ?? group.members ?? 0} members</span>
             <span className="meta-item"><strong>{posts.length}</strong> posts</span>
           </div>
           <div className="actions">
-            <button className={joined ? 'btn-joined' : 'btn btn-primary'} disabled={joined} onClick={handleJoin}>{joined ? "Joined" : "Join"}</button>
+            <button className={joined ? 'btn btn-danger' : 'btn btn-primary'} onClick={handleJoin}>{joined ? 'Leave' : 'Join'}</button>
             <button className="button button-create" onClick={()=>setShowGuidelines(true)}>
               <span className="plus">+</span>
               <span>Create</span>
@@ -178,14 +105,12 @@ const GroupDetails = () => {
           </div>
         </div>
 
-        {/* Shared on header */}
         <div className="posts-header">
           <FaLeaf className="leaf-icon" />
           <h3>Shared on {group.name}</h3>
           <span className="sorted">• Sorted by newest</span>
         </div>
 
-        {/* Main content row */}
         <div className="group-layout">
           <div className="posts-column">
             {posts.length === 0 ? (
@@ -224,7 +149,6 @@ const GroupDetails = () => {
             )}
           </div>
 
-          {/* Right pane: Calendar above Discussion. Modals placed here so they overlay this pane only. */}
           <div className="right-pane" style={{flex:'0.9 1 0', minWidth:'320px', display:'flex', flexDirection:'column', gap:'1.6em', position:'relative'}}>
             <div style={{background: 'var(--card-bg)', borderRadius: '16px', padding: '1em', boxShadow:'0 6px 20px rgba(0,0,0,0.04)'}}>
               <GroupCalendar />
@@ -234,10 +158,9 @@ const GroupDetails = () => {
               <GroupDiscussion />
             </div>
 
-            {/* Guidelines modal (scoped to right-pane) */}
             <Modal isOpen={showGuidelines} onClose={()=>setShowGuidelines(false)}>
               <div style={{fontFamily: 'Poppins', padding: '1.2em 0', textAlign: 'center'}}>
-                <h2 style={{marginBottom:'1em', fontWeight:700, fontFamily: 'Poppins', fontSize:'1.25em', color:'var(--primary)'}}>Post Guidelines & Mental Health Advocacy</h2>
+                <h2 style={{marginBottom:'1em', fontWeight:700, fontFamily: 'Poppins', fontSize:'1.25em', color: 'var(--primary)'}}>Post Guidelines & Mental Health Advocacy</h2>
                 <ul style={{textAlign: 'left', margin: '0 auto 1.5em auto', maxWidth: '420px', fontSize: '1.02em', color: 'var(--text)', lineHeight: '1.6'}}>
                   <li>Be kind, respectful, and supportive to all members.</li>
                   <li>Do not share personal information or private details about others.</li>
@@ -246,14 +169,13 @@ const GroupDetails = () => {
                   <li>This is not a substitute for professional help. If you or someone else is in crisis, seek professional support.</li>
                   <li>All posts are subject to moderation for safety and well-being.</li>
                 </ul>
-                <button className="button" style={{borderRadius:'999px', fontFamily: 'Poppins', fontSize:'1em', padding:'0.7em 1.6em', background: 'var(--primary)', color: 'var(--background)', boxShadow: '0 2px 8px rgba(123, 155, 140, 0.12)'}} onClick={()=>{setShowGuidelines(false); setShowModal(true);}}>Continue</button>
+                <button className="button" style={{borderRadius:'999px', fontFamily: 'Poppins', fontSize:'1em', padding:'0.7em 1.6em', background: 'var(--primary)', color: 'var(--background)', boxShadow: '0 2px 8px rgba(124,58,237,0.12)'}} onClick={()=>{setShowGuidelines(false); setShowModal(true);}}>Continue</button>
               </div>
             </Modal>
 
-            {/* Create Post modal (scoped to right-pane) */}
             <Modal isOpen={showModal} onClose={()=>setShowModal(false)}>
               <div style={{fontFamily: 'Poppins', padding: '1em 0'}}>
-                <h2 style={{marginBottom:'1em', fontWeight:700, fontFamily: 'Poppins', fontSize:'1.25em', color:'var(--primary)'}}>Create a Post</h2>
+                <h2 style={{marginBottom:'1em', fontWeight:700, fontFamily: 'Poppins', fontSize:'1.25em', color: 'var(--primary)'}}>Create a Post</h2>
                 <form onSubmit={handleAddPost} className="ms-form">
                   <div className="ms-row">
                     <label className="ms-label" htmlFor="post-header">Header</label>
@@ -286,3 +208,4 @@ const GroupDetails = () => {
 };
 
 export default GroupDetails;
+
