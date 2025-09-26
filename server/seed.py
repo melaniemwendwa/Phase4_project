@@ -7,9 +7,9 @@ from random import randint, choices
 from faker import Faker
 
 # Local imports
-from app import app
-from models import db, SupportGroup, User, Membership, SessionEvent, GroupMessage, SupportGroupPost
-from config import bcrypt # Import bcrypt to hash passwords
+from .app import app
+from .models import db, SupportGroup, User, Membership, SessionEvent, GroupMessage, SupportGroupPost
+from .config import bcrypt  # Import bcrypt to hash passwords
 
 if __name__ == '__main__':
     fake = Faker()

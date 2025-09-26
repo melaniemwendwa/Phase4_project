@@ -1,10 +1,18 @@
 from flask import request, jsonify, redirect, url_for
 from flask_cors import CORS
 
-from config import app, db
-from models import SupportGroup, Membership, SessionEvent, GroupMessage, Encouragement, SupportGroupPost
-from models import User
-from config import bcrypt
+# Use package-relative imports so the module works when imported as
+# `server.app` (for example by gunicorn) or executed from the package.
+from .config import app, db, bcrypt
+from .models import (
+    SupportGroup,
+    Membership,
+    SessionEvent,
+    GroupMessage,
+    Encouragement,
+    SupportGroupPost,
+    User,
+)
 
 # Enable CORS for React frontend
 CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://127.0.0.1:3000"]}})
