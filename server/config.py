@@ -14,8 +14,11 @@ from flask_bcrypt import Bcrypt
 
 # Instantiate app, set attributes
 app = Flask(__name__)
-# Respect environment DATABASE_URL (typical for managed Postgres on Render/Heroku)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
+# Respect environment DATABASE_URL (typical for managed Postgres on Render/Heroku).
+# If DATABASE_URL is not provided, fall back to a project-relative SQLite file
+# at server/instance/app.db so existing local data is preserved by default.
+default_sqlite_path = os.path.join(os.path.dirname(__file__), 'instance', 'app.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f"sqlite:///{default_sqlite_path}")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Application secret (use env var in production)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret')
@@ -35,3 +38,6 @@ api = Api(app)
 
 # NOTE: CORS is configured in `app.py` with project-specific origins.
 # Avoid initializing CORS twice to prevent inconsistent behavior.
+
+# Warning: `server/seed.py` drops and recreates the database schema. Do NOT run
+# the seed script in production if you want to preserve existing data.
