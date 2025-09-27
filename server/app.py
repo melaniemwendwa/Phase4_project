@@ -61,6 +61,26 @@ def _add_cors_headers(response):
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     return response
 
+
+# Some hosts or middleware may handle OPTIONS before Flask's routing; ensure
+# we always respond to preflight OPTIONS with the proper CORS headers here.
+@app.before_request
+def _handle_preflight():
+    if request.method == 'OPTIONS':
+        # Build a minimal response that will satisfy browser preflight checks.
+        from flask import make_response
+        resp = make_response('', 200)
+        origin = request.headers.get('Origin')
+        if origin and origin in FRONTEND_ORIGINS:
+            resp.headers['Access-Control-Allow-Origin'] = origin
+            resp.headers['Vary'] = 'Origin'
+        else:
+            resp.headers['Access-Control-Allow-Origin'] = FRONTEND_ORIGINS[0]
+        resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
+        resp.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+        resp.headers['Access-Control-Allow-Credentials'] = 'true'
+        return resp
+
 # --- Session/Event Routes ---
 from datetime import datetime
 
