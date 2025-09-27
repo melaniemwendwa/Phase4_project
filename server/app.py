@@ -33,11 +33,14 @@ else:
     ]
 
 # Be explicit about methods and headers so OPTIONS preflight requests succeed.
+# Temporary: allow all origins so deployed frontend can call the API without
+# CORS issues during demos. This will be tightened to only FRONTEND_ORIGINS
+# (from env) after the presentation for better security.
 CORS(app,
-     resources={r"/*": {"origins": FRONTEND_ORIGINS}},
-     supports_credentials=True,
-     allow_headers=["Content-Type", "Authorization"],
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    resources={r"/*": {"origins": "*"}},
+    supports_credentials=False,
+    allow_headers=["Content-Type", "Authorization"],
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 )
 
 
@@ -48,17 +51,12 @@ def _add_cors_headers(response):
     This makes OPTIONS preflight responses explicit for browsers.
     """
     origin = request.headers.get('Origin')
-    if origin and origin in FRONTEND_ORIGINS:
-        response.headers['Access-Control-Allow-Origin'] = origin
-        # Instruct caches/proxies that the response varies by Origin
-        response.headers['Vary'] = 'Origin'
-    else:
-        # Fallback to the first allowed origin (useful for testing)
-        response.headers['Access-Control-Allow-Origin'] = FRONTEND_ORIGINS[0]
-
+    # Allow any origin (temporary). Use '*' when credentials are not needed.
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Vary'] = 'Origin'
     response.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
-    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    # Not sending Access-Control-Allow-Credentials when using '*'
     return response
 
 
