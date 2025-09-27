@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from '../context/AuthProvider';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import { BASE_URL } from '../apiBase';
 
 export default function SignIn() {
     const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function SignIn() {
 
     const submit = async (values, { setSubmitting }) => {
         try {
-            const response = await fetch("http://localhost:5555/signin", {
+            const response = await fetch(`${BASE_URL}/signin`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: values.email, password: values.password }),

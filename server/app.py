@@ -15,7 +15,14 @@ from .models import (
 )
 
 # Enable CORS for React frontend
-CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://127.0.0.1:3000"]}})
+# Allow local dev and the deployed frontend origin on Render
+FRONTEND_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://phase4-project-m8rt.onrender.com",
+]
+
+CORS(app, resources={r"/*": {"origins": FRONTEND_ORIGINS}})
 
 # --- Session/Event Routes ---
 from datetime import datetime
