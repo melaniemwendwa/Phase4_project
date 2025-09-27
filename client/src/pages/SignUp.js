@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthProvider";
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import { BASE_URL } from '../apiBase';
 
 export default function SignUp() {
     const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function SignUp() {
 
     const submit = async (values, { setSubmitting }) => {
         try {
-            const response = await fetch("http://localhost:5555/signup", {
+            const response = await fetch(`${BASE_URL}/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username: values.username, email: values.email, password: values.password }),
