@@ -40,6 +40,27 @@ CORS(app,
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 )
 
+
+@app.after_request
+def _add_cors_headers(response):
+    """Ensure CORS headers are present on all responses, echoing the
+    Origin header when it matches one of the allowed FRONTEND_ORIGINS.
+    This makes OPTIONS preflight responses explicit for browsers.
+    """
+    origin = request.headers.get('Origin')
+    if origin and origin in FRONTEND_ORIGINS:
+        response.headers['Access-Control-Allow-Origin'] = origin
+        # Instruct caches/proxies that the response varies by Origin
+        response.headers['Vary'] = 'Origin'
+    else:
+        # Fallback to the first allowed origin (useful for testing)
+        response.headers['Access-Control-Allow-Origin'] = FRONTEND_ORIGINS[0]
+
+    response.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    return response
+
 # --- Session/Event Routes ---
 from datetime import datetime
 
