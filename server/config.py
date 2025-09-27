@@ -34,6 +34,18 @@ else:
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{default_sqlite_path}"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+
+# If we're using the project-relative SQLite file, ensure the parent directory
+# exists so SQLite can create/open the file on startup (useful on hosts
+# where the checkout directory might not include the instance folder yet).
+if SQLALCHEMY_DATABASE_URI.startswith('sqlite:'):
+    try:
+        parent_dir = os.path.dirname(default_sqlite_path)
+        os.makedirs(parent_dir, exist_ok=True)
+    except Exception:
+        # If we cannot create the directory, let SQLAlchemy raise the original
+        # error; don't mask permission issues silently.
+        pass
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Application secret (use env var in production)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret')
