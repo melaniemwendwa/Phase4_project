@@ -18,7 +18,22 @@ app = Flask(__name__)
 # If DATABASE_URL is not provided, fall back to a project-relative SQLite file
 # at server/instance/app.db so existing local data is preserved by default.
 default_sqlite_path = os.path.join(os.path.dirname(__file__), 'instance', 'app.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f"sqlite:///{default_sqlite_path}")
+
+# Read DATABASE_URL and normalize/validate it. Some hosts (Render) provide
+# a URL using the `postgres://` scheme while SQLAlchemy expects
+# `postgresql://` (or a driver-prefixed URL). Also guard against empty
+# environment variables which would cause SQLAlchemy to throw.
+raw_db = os.environ.get('DATABASE_URL') or ''
+raw_db = raw_db.strip()
+if raw_db:
+    # Normalize the common postgres scheme
+    if raw_db.startswith('postgres://'):
+        raw_db = raw_db.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = raw_db
+else:
+    SQLALCHEMY_DATABASE_URI = f"sqlite:///{default_sqlite_path}"
+
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Application secret (use env var in production)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret')
