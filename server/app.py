@@ -27,9 +27,18 @@ else:
     FRONTEND_ORIGINS = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        # allow the deployed frontend by default so CORS works even if env var
+        # wasn't set on the host
+        "https://phase4-project-m8rt.onrender.com",
     ]
 
-CORS(app, resources={r"/*": {"origins": FRONTEND_ORIGINS}})
+# Be explicit about methods and headers so OPTIONS preflight requests succeed.
+CORS(app,
+     resources={r"/*": {"origins": FRONTEND_ORIGINS}},
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+)
 
 # --- Session/Event Routes ---
 from datetime import datetime
