@@ -64,3 +64,6 @@ __pycache__
 instance
 .vscode
 package-lock.json
+
+# Keep instance DB in the repo for quick deploys (un-ignore the file explicitly)
+!server/instance/app.db
