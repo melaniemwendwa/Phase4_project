@@ -1,6 +1,7 @@
 # Standard library imports
 
 # Remote library imports
+import os
 from flask import Flask
 from flask_cors import CORS
 from flask_migrate import Migrate
@@ -13,8 +14,11 @@ from flask_bcrypt import Bcrypt
 
 # Instantiate app, set attributes
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+# Respect environment DATABASE_URL (typical for managed Postgres on Render/Heroku)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Application secret (use env var in production)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret')
 app.json.compact = False
 
 # Define metadata, instantiate db

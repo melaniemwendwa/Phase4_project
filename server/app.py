@@ -16,11 +16,18 @@ from .models import (
 
 # Enable CORS for React frontend
 # Allow local dev and the deployed frontend origin on Render
-FRONTEND_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://phase4-project-m8rt.onrender.com",
-]
+import os
+
+# Build allowed CORS origins from environment (supports a single FRONTEND_URL
+# or a comma-separated FRONTEND_ORIGINS). Falls back to localhost dev origins.
+env_frontend = os.environ.get('FRONTEND_URL') or os.environ.get('FRONTEND_ORIGINS')
+if env_frontend:
+    FRONTEND_ORIGINS = [u.strip() for u in env_frontend.split(',') if u.strip()]
+else:
+    FRONTEND_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 
 CORS(app, resources={r"/*": {"origins": FRONTEND_ORIGINS}})
 
